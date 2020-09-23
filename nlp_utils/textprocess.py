@@ -15,38 +15,53 @@ punctuations = string.punctuation
 nlp = spacy.load('en_core_sci_lg')
 
 #Lexicon normalization and noise removal; an importable, multisituational function for normalization
-def tokenizer(text, lookup_dict, custom_stop_words, skip_words, custom_autocorrect):
+def tokenizer(text, lookup_dict=None, custom_stop_words=[], skip_words=[], custom_autocorrect=None):
     mytokens = nlp(text)
-    # print(type(mytokens))
+
     mytokens = [word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_ for word in mytokens]
-    mytokens = [word for word in mytokens if word not in custom_stop_words and word not in punctuations]
+    mytokens = [word for word in mytokens if word not in punctuations]
+
+    if len(custom_stop_words):
+        mytokens = [word for word in mytokens if word not in custom_stop_words]
+
     mytokens = " ".join([i for i in mytokens])
     mytokens = re.sub('\W+',' ', mytokens)
     mytokens = re.sub('\s+',' ', mytokens)
-    mytokens = _standardize_words(mytokens, lookup_dict)
-    mytokens = mytokens.split()
-    mytokens1 = []
-    # checklist = []
-    corrected_words = 0
-    for token in mytokens:
-        syns = wordnet.synsets(token)
-        if not syns and token not in skip_words:
-            token1 = token
-            token = return_correct(token, custom_autocorrect)
-            if token != "Null":
-                # print("this token: (%s) has been corrected into: (%s)", token1, token)
-                mytokens1.append(token)
-                corrected_words += 1
+
+    if lookup_dict != None:
+        mytokens = _standardize_words(mytokens, lookup_dict)
+
+    
+    if custom_autocorrect != None:
+
+        mytokens = mytokens.split()
+
+        mytokens1 = []
+
+        corrected_words = 0
+        for token in mytokens:
+            syns = wordnet.synsets(token)
+            if not syns and token not in skip_words:
+                token1 = token
+                token = return_correct(token, custom_autocorrect)
+                if token != "Null":
+                    # print("this token: (%s) has been corrected into: (%s)", token1, token)
+                    mytokens1.append(token)
+                    corrected_words += 1
+                else:
+                    mytokens1.append(token1)
             else:
-                mytokens1.append(token1)
-        else:
-            mytokens1.append(token)
+                mytokens1.append(token)
 
-    print("Amount of corrected words are: ", corrected_words)
+        print("Amount of corrected words are: ", corrected_words)
 
-    mytokens1 = " ".join([i for i in mytokens1])
-    mytokens1 = _standardize_words(mytokens1, lookup_dict)
-    return mytokens1
+        mytokens1 = " ".join([i for i in mytokens1])
+        if lookup_dict != None:
+            mytokens1 = _standardize_words(mytokens1, lookup_dict)
+
+        mytokens = mytokens1
+
+    return mytokens
 
 
 #Damerau-LV Distance outputs minimum cost of converting on string into another utilizing
