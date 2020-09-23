@@ -23,7 +23,7 @@ def find_k(X_reduced):
     for k in K:
         k_means = KMeans(n_clusters = k, random_state = 42).fit(X_reduced)
         k_means.fit(X_reduced)
-        distortions.append(sum(np.min(cdist(X_reduced, k_means.cluster_centers_, 'euclidean'), axis=1)) / X.shape[0])
+        distortions.append(sum(np.min(cdist(X_reduced, k_means.cluster_centers_, 'euclidean'), axis=1)) / X_reduced.shape[0])
         #print('Found distortion for {} clusters'.format(k))
 
     X_line = [K[0], K[-1]]
