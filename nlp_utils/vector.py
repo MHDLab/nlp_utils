@@ -65,7 +65,7 @@ def vectorization(df, k):
     # print(len(vectorized_data))
     return vectorizers, vectorized_data
 
-def selected_topics(model, vectorizer, top_n = 3):
+def selected_topics(model, vectorizer, top_n):
     """
     Function called by topic_modelling to find keywords for topics.
     """
@@ -73,6 +73,7 @@ def selected_topics(model, vectorizer, top_n = 3):
     keywords = []
 
     for idx, topic in enumerate(model.components_):
+        #topic.argsort gives indicies of of top_n words associated with topic 
         words = [(vectorizer.get_feature_names()[i], topic[i]) for i in topic.argsort()[:-top_n - 1:-1]]
         for word in words:
             if word[0] not in current_words:
@@ -88,11 +89,18 @@ def selected_topics(model, vectorizer, top_n = 3):
 
     return return_values
 
-def topic_modelling(k, vectorizers, vectorized_data):
+def topic_modelling(k, vectorizers, vectorized_data, NUM_TOPICS_PER_CLUSTER = 20, top_n = 3):
     """
     Topic modelling starts using LDA machine-learning model starts here.
+
+    NUM_TOPICS_PER_CLUSTER number of topics for lda model of each cluster 
+
+    top_n:how many words are added for each topic to the total cluster topic
+    list. The top_n words from a previous topic will not be included, so the
+    total number of words will be somewhat less that
+    NUM_TOPICS_PER_CLUSTER*top_n
     """
-    NUM_TOPICS_PER_CLUSTER = 20
+    
 
     lda_models = []
     for ii in range(0, k):
@@ -112,7 +120,7 @@ def topic_modelling(k, vectorizers, vectorized_data):
     for current_vectorizer, lda in enumerate(lda_models):
         # print("Current Cluster: " + str(current_vectorizer))
         if vectorized_data[current_vectorizer] != None:
-            all_keywords.append(selected_topics(lda, vectorizers[current_vectorizer]))
+            all_keywords.append(selected_topics(lda, vectorizers[current_vectorizer], top_n))
 
     return all_keywords
 
