@@ -88,9 +88,11 @@ def lit_cluster_plot(tsne_x, tsne_y, y_labels, topics, keywords, display_text, s
         taptool.callback = callback_selected
 
         #WIDGETS
-        slider = Slider(start=0, end=num_clusters, value=num_clusters, step=1, title="Cluster #", callback = input_callback_1)
+        slider = Slider(start=0, end=num_clusters, value=num_clusters, step=1, title="Cluster #")
+        slider.js_on_change('value', input_callback_1)
         # slider.js_on_change('value', callback)bo
-        keyword = TextInput(title="Search:", callback = input_callback_1)
+        keyword = TextInput(title="Search:")
+        keyword.js_on_change('value', input_callback_1)
         # keyword.js_on_change('value', callback)
 
         #pass call back arguments
@@ -158,7 +160,7 @@ def selected_code():
             var texts = [];
             cb_data.source.selected.indices.forEach(index => texts.push(source.data['display_text'][index].slice(0,2000)));
 
-            text = "<h4>" + texts[0].toString() + "</h4>";
+            var text = "<h4>" + texts[0].toString() + "</h4>";
 
             current_selection.text =  text
             current_selection.change.emit();
@@ -178,14 +180,14 @@ def input_callback(plot, source, out_text, topics, num_clusters):
                     var data = source.data;
 
 
-                    x = data['x'];
-                    y = data['y'];
-                    x_backup = data['x_backup'];
-                    y_backup = data['y_backup'];
-                    labels = data['desc'];
-                    text = data['search_text'];
+                    var x = data['x'];
+                    var y = data['y'];
+                    var x_backup = data['x_backup'];
+                    var y_backup = data['y_backup'];
+                    var labels = data['desc'];
+                    var text = data['search_text'];
 
-
+                    var i;
                     if (cluster == num_clusters) {
                         out_text.text = 'Keywords: Slide to specific cluster to see the keywords.';
                         for (i = 0; i < x.length; i++) {
