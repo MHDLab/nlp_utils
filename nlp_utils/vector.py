@@ -3,48 +3,11 @@ import numpy as np
 import pandas as pd
 import os
 
-from sklearn import metrics
-from scipy.spatial.distance import cdist
-from sklearn.cluster import KMeans
 from sklearn.decomposition import LatentDirichletAllocation
 
 pd.options.mode.chained_assignment = None
 
-from yellowbrick.cluster import KElbowVisualizer, SilhouetteVisualizer, InterclusterDistance
-
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-
-def find_k(X_reduced):
-    """
-    Finding k clusters appropriate for modeling the data
-    """
-    distortions = []
-    K = range(2,50)
-    for k in K:
-        k_means = KMeans(n_clusters = k, random_state = 42).fit(X_reduced)
-        k_means.fit(X_reduced)
-        distortions.append(sum(np.min(cdist(X_reduced, k_means.cluster_centers_, 'euclidean'), axis=1)) / X_reduced.shape[0])
-        #print('Found distortion for {} clusters'.format(k))
-
-    X_line = [K[0], K[-1]]
-    Y_line = [distortions[0], distortions[-1]]
-
-    # Plot the elbow to find optimal k
-    plt.plot(K, distortions, 'b-')
-    plt.plot(X_line, Y_line, 'r')
-    plt.xlabel('k')
-    plt.ylabel('Distortion')
-    plt.title('The Elbow Method showing the optimal k')
-    plt.show()
-
-    # Finding optimal k using open source API
-    # Instantiate the clustering model and visualizer
-    k_means = KMeans(random_state = 42).fit(X_reduced)
-    visualizer = KElbowVisualizer(k_means, k=(2,50))
-
-    visualizer.fit(X_reduced)        # Fit the data to the visualizer
-    visualizer.show()
-
 
 
 def vectorization(df, k):
@@ -126,6 +89,7 @@ def topic_modelling(k, vectorizers, vectorized_data, NUM_TOPICS_PER_CLUSTER = 20
 
 
 def find_keywords(corpus, N):
+    """Find top words of a given text, probably only useful for long texts"""
     corpus = [corpus]
     vectorizer = TfidfVectorizer(ngram_range = (1,1))
     vectors = vectorizer.fit_transform(corpus)
