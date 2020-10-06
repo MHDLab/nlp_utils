@@ -34,37 +34,31 @@ def selected_topics(model, vectorizer, top_n):
 
     return return_values
 
-def topic_modelling(df, NUM_TOPICS_PER_CLUSTER = 20, top_n = 3):
+def lda_top_kewords(text, NUM_TOPICS = 5, top_n = 5):
     """
-    Topic modelling starts using LDA machine-learning model starts here.
+    Topic modeling on a group of text, returning the top n keywords from each topic
 
-    NUM_TOPICS_PER_CLUSTER number of topics for lda model of each cluster 
+    NUM_TOPICS number of topics for lda model
 
     top_n:how many words are added for each topic to the total cluster topic
     list. The top_n words from a previous topic will not be included, so the
     total number of words will be somewhat less that
     NUM_TOPICS_PER_CLUSTER*top_n
     """
-    
-    all_keywords = []
-    # vectorizers = []
 
-    k = len(set(df['y_pred']))
 
-    for current_cluster in range(0, k):
-        # Creating a vectorizer; removed stop_words = 'english'
-        vectorizer = CountVectorizer(ngram_range = (1,2), min_df = 2, max_df = 0.80, lowercase = True, token_pattern = '[a-zA-Z\-][a-zA-Z\-]{2,}')
+    # Creating a vectorizer; removed stop_words = 'english'
+    vectorizer = CountVectorizer(ngram_range = (1,2), min_df = 2, max_df = 0.80, lowercase = True, token_pattern = '[a-zA-Z\-][a-zA-Z\-]{2,}')
 
-        vectorized_data = vectorizer.fit_transform(df.loc[df['y_pred'] == current_cluster, 'processed_text'])
+    vectorized_data = vectorizer.fit_transform(text)
 
-        lda = LatentDirichletAllocation(n_components = NUM_TOPICS_PER_CLUSTER, max_iter = 10, learning_method = 'online', verbose = False, random_state = 42)
+    lda = LatentDirichletAllocation(n_components = NUM_TOPICS, max_iter = 10, learning_method = 'online', verbose = False, random_state = 42)
 
-        if vectorized_data != None:
-            cluster_lda_data = lda.fit_transform(vectorized_data)
+    cluster_lda_data = lda.fit_transform(vectorized_data)
 
-            all_keywords.append(selected_topics(lda, vectorizer, top_n))
+    keywords = selected_topics(lda, vectorizer, top_n)
 
-    return all_keywords
+    return keywords
 
 
 def find_keywords(corpus, N):
