@@ -34,7 +34,7 @@ def selected_topics(model, vectorizer, top_n):
 
     return return_values
 
-def topic_modelling(df, k, NUM_TOPICS_PER_CLUSTER = 20, top_n = 3):
+def topic_modelling(df, NUM_TOPICS_PER_CLUSTER = 20, top_n = 3):
     """
     Topic modelling starts using LDA machine-learning model starts here.
 
@@ -48,6 +48,8 @@ def topic_modelling(df, k, NUM_TOPICS_PER_CLUSTER = 20, top_n = 3):
     
     all_keywords = []
     # vectorizers = []
+
+    k = len(set(df['y_pred']))
 
     for current_cluster in range(0, k):
         # Creating a vectorizer; removed stop_words = 'english'
