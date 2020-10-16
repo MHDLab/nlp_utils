@@ -15,7 +15,7 @@ from bokeh.layouts import column, widgetbox, row, layout
 
 
 
-def lit_cluster_plot(tsne_x, tsne_y, y_labels, topics, keywords, display_text, search_text, hover_df):
+def lit_cluster_plot(tsne_x, tsne_y, y_labels, topics,  display_text, search_text, hover_df):
 
         num_clusters = len(set(y_labels))
 
@@ -28,7 +28,6 @@ def lit_cluster_plot(tsne_x, tsne_y, y_labels, topics, keywords, display_text, s
                 x_backup = tsne_x,
                 y_backup = tsne_y,
                 desc= y_labels,
-                keywords = keywords,
                 labels = ["C-" + str(x) for x in y_labels],
                 display_text = display_text,
                 search_text = search_text,
