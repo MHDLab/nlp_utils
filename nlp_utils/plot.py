@@ -2,9 +2,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from . import gensim_utils
+from . import sklearn_utils
 
-def topics_fig(df_top, top_doc_topics_gensim, tsne_x, tsne_y):
+def topics_fig(df_topickeywords, tsne_x, tsne_y ,doc_topic_probs, titlestr = None):
 
+    df_doc_topic_probs = pd.DataFrame(doc_topic_probs)
+    top_topic_doc = df_doc_topic_probs.idxmax(axis=1)
+    top_topic_doc.name = 'top_topic_doc'
 
     fig = plt.figure(figsize=(10,10))
 
@@ -17,16 +22,16 @@ def topics_fig(df_top, top_doc_topics_gensim, tsne_x, tsne_y):
     cmap = plt.get_cmap('tab20')
 
     #Topic count bar plot
-    n_topics = len(df_top.index)
+    n_topics = len(df_topickeywords.index)
 
     #some topics may have zero texts with that top topic, so value counts will give incomplete index
     topic_counts = pd.Series(index=range(n_topics))
-    topic_counts_temp = top_doc_topics_gensim.value_counts()
+    topic_counts_temp = top_topic_doc.value_counts()
     topic_counts.iloc[topic_counts_temp.index] = topic_counts_temp.values
     topic_counts = topic_counts.fillna(0).sort_values(ascending=False)
 
     #Table
-    topic_strs = df_top.apply(" ".join, axis=1)
+    topic_strs = df_topickeywords.apply(" ".join, axis=1)
     topic_strs.name = 'Top Topic Words'
     topic_strs = topic_strs.iloc[topic_counts.index]
 
@@ -43,7 +48,7 @@ def topics_fig(df_top, top_doc_topics_gensim, tsne_x, tsne_y):
     tab.set_fontsize(8)
 
     #TSNE plot
-    ax1.scatter(tsne_x,tsne_y,c = top_doc_topics_gensim.values, cmap = cmap, s = 3)
+    ax1.scatter(tsne_x,tsne_y,c = top_topic_doc.values, cmap = cmap, s = 3)
     ax1.set_xlabel('TSNE x')
     ax1.set_ylabel('TSNE y')
 
@@ -54,7 +59,27 @@ def topics_fig(df_top, top_doc_topics_gensim, tsne_x, tsne_y):
     ax2.set_xlabel('Topic Number')
     ax2.set_ylabel('Count')
 
+    #TODO: have subplots adjust adapts to titlestr length
+    if titlestr == None:
+        fig.tight_layout()
+    else:
+        fig.suptitle(titlestr)
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.93)
     
+    return fig
 
+def topics_fig_bigramlda(texts, bigram_kwargs, lda_kwargs):
+
+    texts_bigram, id2word, data_words, lda_model = gensim_utils.gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs)
+
+    df_topickeywords, doc_topic_probs = gensim_utils.gensim_topic_info(lda_model, data_words, id2word)
+
+    num_bigrams, total_words = gensim_utils.bigram_stats(data_words, id2word)
+    titlestr = str(lda_kwargs) + str(bigram_kwargs) + "\n Num Bigrams: " + str(num_bigrams) + ", Total Words: " + str(total_words) + ", Bigram Fraction: " + str(round(num_bigrams/total_words, 3))
+
+    tsne_x, tsne_y = sklearn_utils.calc_tsne(texts_bigram)
+
+    fig = topics_fig(df_topickeywords, tsne_x, tsne_y, doc_topic_probs, titlestr)
 
     return fig
