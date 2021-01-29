@@ -59,3 +59,50 @@ def bigram_stats(data_words, id2word):
     total_words = len(vocab)
 
     return num_bigrams, total_words
+
+
+#Topic covariance 
+#https://www.aclweb.org/anthology/W14-3112.pdf
+
+from numba import jit
+import xarray as xr
+
+@jit(nopython=True)
+def calc_cov(gamma_di_sub):
+
+    n_docs = gamma_di_sub.shape[0]
+    n_topics = gamma_di_sub.shape[1]
+
+    sigma = np.zeros((n_topics,n_topics))
+    sigma
+    for i in range(n_topics):
+        for j in range(n_topics):
+            sum = 0
+            for doc in range(n_docs):
+                sum = sum + gamma_di_sub[doc][i]*gamma_di_sub[doc][j]
+            sigma[i][j] = sum
+
+    return sigma
+
+def calc_cov_wrap(df_doc_topic_probs, topic_names):
+    
+    #First calculat gamma_di - gamma_i which is the main factor in covariance matrix
+
+    #All basically 1...Think I already normalized
+    gamma_di = df_doc_topic_probs#.values
+
+    gamma_i = (1/len(df_doc_topic_probs.index))*df_doc_topic_probs.sum()
+
+    gamma_di_sub = gamma_di.copy()
+
+    for topic in gamma_i.index:
+        gamma_di_sub[topic] = gamma_di[topic] - gamma_i[topic]
+
+    gamma_di_sub = gamma_di_sub.values
+
+    #Then run numba optimized function
+    sigma = calc_cov(gamma_di_sub)
+
+    da_sigma = xr.DataArray(sigma, coords = {'topic_i': topic_names, 'topic_j': topic_names}, dims = ['topic_i', 'topic_j'])
+
+    return da_sigma
