@@ -11,7 +11,11 @@ from tmtoolkit.bow.bow_stats import doc_lengths
 
 
 def gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs):
+    """
+    Basic model generation pipeline to generate bigrams from a series of texts and then generate an LDA model. 
 
+    bigram_kwargs and lda_kwargs are dictionaries for the bigram phraser and LDA model generation. 
+    """
     bigram = gensim.models.Phrases(texts, **bigram_kwargs)
     bigram_mod = gensim.models.phrases.Phraser(bigram)
 
@@ -30,7 +34,9 @@ def gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs):
 
 
 def get_vocab_docl(data_words, id2word):
-
+    """
+    Extract a vocabulary list and length of each document
+    """
     dtm = gensim.matutils.corpus2csc(data_words).astype(int).T
     doc_l = doc_lengths(dtm)
     vocab = np.array([id2word[i] for i in range(dtm.shape[1])])
@@ -38,7 +44,9 @@ def get_vocab_docl(data_words, id2word):
     return vocab, doc_l
 
 def gensim_topic_info(lda_model, data_words, id2word, lambda_=0.6):
-
+    """
+    Extracts the top keywords for each topic, and the document-topic probability matrix from an LDA model
+    """
     vocab, doc_l = get_vocab_docl(data_words, id2word)
 
     doc_topic_probs = list(lda_model.get_document_topics(data_words, minimum_probability=0))
@@ -69,7 +77,11 @@ import xarray as xr
 
 @jit(nopython=True)
 def calc_cov(gamma_di_sub):
-
+    """
+    Calculate the covariance matrix sigma(i,j) from gamma_di_sub = gamma_di - gamma_i
+    See the link above. 
+    This functuion only uses numpy arrays and can be sped up with numba, but this doesn't seem to work on heroku. 
+    """
     n_docs = gamma_di_sub.shape[0]
     n_topics = gamma_di_sub.shape[1]
 
@@ -85,8 +97,13 @@ def calc_cov(gamma_di_sub):
     return sigma
 
 def calc_cov_wrap(df_doc_topic_probs, topic_names):
+    """
+    Calculates the topic covariance matrix from the document topic probability matrix (theta_di)
+
+    First calculate gamma_di - gamma_i which is the main factor in covariance matrix
+    """
     
-    #First calculat gamma_di - gamma_i which is the main factor in covariance matrix
+    #
 
     #All basically 1...Think I already normalized
     gamma_di = df_doc_topic_probs#.values
