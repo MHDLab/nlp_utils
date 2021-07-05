@@ -58,6 +58,17 @@ def gensim_topic_info(lda_model, data_words, id2word, lambda_=0.6):
 
     return df_topickeywords, doc_topic_probs
 
+def gensim_edge_info(lda_model, data_words, id2word, lambda_=0.6):
+    """
+    Extracts the top keywords for each set of two topics
+    """
+    vocab, doc_l = get_vocab_docl(data_words, id2word)
+
+    topic_term = lda_model.get_topics()
+    topic_word_rel = topic_word_relevance(topic_term, doc_topic_probs, doc_l, lambda_=lambda_)
+    df_topickeywords = ldamodel_top_topic_words(topic_word_rel, vocab, top_n=10, val_fmt=r"{lbl}")
+
+    return df_topickeywords
 
 def bigram_stats(data_words, id2word):
     vocab, docl = get_vocab_docl(data_words, id2word)
