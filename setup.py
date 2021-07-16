@@ -28,6 +28,10 @@ VERSION = 0.1
 
 # What packages are required for this module to be executed?
 REQUIRED = [
+    'xarray',
+    'numba',
+    'tmtoolkit',
+    'scikit-learn'
 ]
 
 # What packages are optional?
