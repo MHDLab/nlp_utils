@@ -212,7 +212,6 @@ dependencies:
   - zlib=1.2.11=h62dcd97_4
   - zstd=1.4.9=h19a0ad4_0
   - pip:
-    - mat2vec==0.2
     - python-louvain==0.15
     - spacy==2.3.7
     - tmtoolkit==0.10.0
