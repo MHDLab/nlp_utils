@@ -83,3 +83,15 @@ def topics_fig_bigramlda(texts, bigram_kwargs, lda_kwargs):
     fig = topics_fig(df_topickeywords, tsne_x, tsne_y, doc_topic_probs, titlestr)
 
     return fig
+
+def top_word_plot(tw, titlestr=''):
+    """histogram plot of word counts"""
+    counts = [w[1] for w in tw]
+    bins = np.logspace(np.log10(0.9),np.log10(tw[0][1]), 100)
+    plt.hist(counts, bins=bins)
+    plt.yscale('log')
+    plt.xscale('log')
+
+    titlestr = titlestr + ',  Num Words: ' + str(len(tw))
+    print(titlestr)
+    plt.suptitle(titlestr)
