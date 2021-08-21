@@ -1,4 +1,5 @@
 
+import numpy as np
 import pandas as pd
 
 def calc_topics_year(df_doc_topic_probs, s_year, norm_each_topic=True):
@@ -43,3 +44,19 @@ def calc_topics_year(df_doc_topic_probs, s_year, norm_each_topic=True):
 
     return df_topicsyear
 
+def fit_topic_year(df_topicsyear, year_range = None):
+
+    if year_range is not None:
+        df_topicsyear = df_topicsyear.loc[year_range]
+        
+    #TODO: make general for more polynomial degrees
+    df_fit_params = pd.DataFrame(index=df_topicsyear.columns, columns = ['slope', 'offset'])
+
+    for topic_id in df_topicsyear:
+
+        s_time_fit = df_topicsyear[topic_id]
+        m, b = np.polyfit(x=s_time_fit.index, y=s_time_fit.values, deg=1)
+        df_fit_params.loc[topic_id]['slope'] = m
+        df_fit_params.loc[topic_id]['offset'] = b
+
+    return df_fit_params 

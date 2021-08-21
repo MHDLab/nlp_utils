@@ -95,3 +95,47 @@ def top_word_plot(tw, titlestr=''):
     titlestr = titlestr + ',  Num Words: ' + str(len(tw))
     print(titlestr)
     plt.suptitle(titlestr)
+
+
+import math
+from textwrap import wrap
+from .common import fit_topic_year
+
+
+def top_slopes_plot(df_topicsyear, topic_strs, year_range_fit, n_plots = 5, ascending=False):
+    col_wrap = 5
+    
+    df_fit_params  = fit_topic_year(df_topicsyear, year_range_fit)
+    top_slopes = df_fit_params['slope'].sort_values(ascending=ascending)[0:n_plots]
+    
+    n_rows = math.trunc(len(top_slopes)/col_wrap)
+
+    fig, axes = plt.subplots(n_rows, min(col_wrap,len(top_slopes.index)), figsize=(20,4*n_rows), sharey=True, squeeze=False)
+    
+    for i, topic_id in enumerate(top_slopes.index):
+        
+        col = int(i % col_wrap)
+        row = int(math.trunc(i/col_wrap))
+
+        #Time Series plot
+        s_time = df_topicsyear[topic_id]
+        s_time.plot(ax=axes[row][col])
+
+        #Fit Plot
+        z_topic = (df_fit_params.loc[topic_id]['slope'], df_fit_params.loc[topic_id]['offset'])
+        p = np.poly1d(z_topic)
+        ys = p(s_time.loc[year_range_fit].index)
+        axes[row][col].plot(s_time.loc[year_range_fit].index, ys, color='red')
+
+        #Annotation
+        t_w = topic_strs.loc[topic_id]
+        t_w = "\n".join(wrap(t_w, width = 30))
+        axes[row][col].set_title(topic_id + ": " + t_w)
+
+    current_ylim = axes[0][0].get_ylim()
+    for ax in axes.flatten():
+        ax.set_ylim(0, current_ylim[1]*1.2)
+
+    axes[0][0].set_ylabel('Normalized (over years) Topic Probability')
+
+    fig.tight_layout()
