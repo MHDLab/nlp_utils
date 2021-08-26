@@ -8,6 +8,25 @@ from tmtoolkit.topicmod.model_stats import topic_word_relevance
 from tmtoolkit.bow.bow_stats import doc_lengths
 
 
+def gensim_bigram(texts, bigram_kwargs):
+    bigram = gensim.models.Phrases(texts, **bigram_kwargs)
+    bigram_mod = gensim.models.phrases.Phraser(bigram)
+
+    texts_bigram = [bigram_mod[doc] for doc in texts]
+
+    return texts_bigram
+
+def basic_gensim_lda(texts, lda_kwargs):
+    id2word = gensim.corpora.Dictionary(texts)
+    data_words = [id2word.doc2bow(doc) for doc in texts]
+
+    lda_model = gensim.models.LdaModel(
+                                    data_words,
+                                    **lda_kwargs,
+                                    random_state=42
+    )
+
+    return id2word, data_words, lda_model
 
 
 def gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs):
@@ -16,19 +35,10 @@ def gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs):
 
     bigram_kwargs and lda_kwargs are dictionaries for the bigram phraser and LDA model generation. 
     """
-    bigram = gensim.models.Phrases(texts, **bigram_kwargs)
-    bigram_mod = gensim.models.phrases.Phraser(bigram)
 
-    texts_bigram = [bigram_mod[doc] for doc in texts]
-
-    id2word = gensim.corpora.Dictionary(texts_bigram)
-    data_words = [id2word.doc2bow(doc) for doc in texts_bigram]
-
-    lda_model = gensim.models.LdaModel(
-                                    data_words,
-                                    **lda_kwargs,
-                                    random_state=42
-    )
+    texts_bigram = gensim_bigram(texts, bigram_kwargs)
+    id2word, data_words, lda_model = basic_gensim_lda(texts, lda_kwargs)
+    
 
     return texts_bigram, id2word, data_words, lda_model
 
