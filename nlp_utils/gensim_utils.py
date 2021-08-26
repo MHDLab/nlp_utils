@@ -8,9 +8,19 @@ from tmtoolkit.topicmod.model_stats import topic_word_relevance
 from tmtoolkit.bow.bow_stats import doc_lengths
 
 
-def gensim_bigram(texts, bigram_kwargs):
+def gensim_bigram(texts, bigram_kwargs, fixed_bigrams = None):
     bigram = gensim.models.Phrases(texts, **bigram_kwargs)
-    bigram_mod = gensim.models.phrases.Phraser(bigram)
+
+
+    bigram_mod = bigram.freeze()
+
+    #alias of gensim.models.phrases.FrozenPhrases
+    # bigram_mod = gensim.models.phrases.Phraser(bigram)
+
+    #https://github.com/RaRe-Technologies/gensim/issues/1465#issuecomment-706620266
+    if fixed_bigrams is not None:
+        for fixed_bigram in fixed_bigrams:
+            bigram_mod.phrasegrams[fixed_bigram] = float('inf')
 
     texts_bigram = [bigram_mod[doc] for doc in texts]
 
