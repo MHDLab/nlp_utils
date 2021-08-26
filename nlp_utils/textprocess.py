@@ -33,7 +33,20 @@ sys.path.append(r'C:\Users\aspit\Git\MLEF-Energy-Storage\ES_TextData\mat2vec')
 from mat2vec.processing import MaterialsTextProcessor
 from . import text_analysis
 
-def text_processing_pipeline(texts, debug = False):
+def text_processing_pipeline(docs, debug = False):
+
+    #TODO: combine with punctuation below. Found it would only get isolated punct, not like "however,"
+    for punct in string.punctuation.replace('-',''):
+        docs = docs.apply(lambda x: x.replace(punct,''))
+
+    docs = docs.apply(lambda x: x.replace('-', '_'))
+
+    #TODO: figure out encoding...this is a 'long hyphen'
+    #https://stackoverflow.com/questions/19149577/python-replace-long-dash-with-short-dash
+    docs = docs.apply(lambda x: x.replace(b'\xe2\x80\x93'.decode('utf-8'), '_'))
+
+    texts = docs.apply(str.split)
+
     print('Removing stopwords')
     en_stopwords  = stopwords.words('english')
     all_stops = set(en_stopwords) | set(string.punctuation)
