@@ -37,7 +37,7 @@ def gen_citation_graph(df):
 
     return G
 
-def trim_graph(G, min_edge_factor, max_papers):
+def trim_graph(G, con, frac_keep):
     """
     removes nodes with fewer than a given number of edges
     """
@@ -45,13 +45,27 @@ def trim_graph(G, min_edge_factor, max_papers):
     print("Total Nodes:" + str(len(nodes)))
 
     s_degrees = pd.Series(dict(G.degree()))
-    num_edges = int(np.log(len(s_degrees)))/min_edge_factor
-    print('discading nodes with fewer than ' + str(num_edges) + ' edges')
 
-    s_degrees = s_degrees.where(s_degrees > num_edges).dropna()
+    ## Old method
+    # num_edges = int(np.log(len(s_degrees)))/min_edge_factor
+    # print('discading nodes with fewer than ' + str(num_edges) + ' edges')
+
+    n_most_connected = 10000
+    s_degrees = s_degrees.sort_values(ascending=False)[0:n_most_connected]
+
+    df_all = load_df_semantic(con, s_degrees.index)
+    n_citations = df_all['inCitations'].apply(len) + df_all['outCitations'].apply(len) 
+
+    s_degrees = s_degrees.loc[n_citations.index] # Some edges are not in database
+    print("Before fractional drop: " + str(len(s_degrees)))
+
+    frac_keep = 0.05
+    frac_connected = s_degrees/n_citations
+    print('discading nodes with fewer than ' + str(frac_keep) + ' edges')
+
+    s_degrees = s_degrees.where(frac_connected > frac_keep).dropna()
     print("After trimming edges: " + str(len(s_degrees)))
-    s_degrees = s_degrees.sort_values(ascending=False).iloc[:max_papers]
-    print("After trimming num papers: " + str(len(s_degrees)))
+ 
 
     return G.subgraph(s_degrees.index)
 
@@ -69,9 +83,12 @@ if __name__ == '__main__':
     
     G = gen_citation_graph(df_cits)
 
-    G = trim_graph(G, 1, 1000)
+    df_all = load_df_semantic(con, list(G.nodes))
+    n_citations = df_all['inCitations'].apply(len) + df_all['outCitations'].apply(len) 
 
-    df_comm = load_df_semantic(con, list(G.nodes))
+    G = trim_graph(G, n_citations, 0.2, 1000)
+
+    df_comm = load_df_semantic(con, list(G.nodes)) # I Don't think this is necessary anymore
     print("Existing in database " + str(len(df_comm)))
 
 
