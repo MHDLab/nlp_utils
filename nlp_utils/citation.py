@@ -37,12 +37,10 @@ def gen_citation_graph(df):
 
     return G
 
-def trim_graph(G, con, frac_keep):
+def trim_graph(G, con, frac_keep_factor =1, n_initial_trim = 10000):
     """
     removes nodes with fewer than a given number of edges
     """
-    nodes = list(G.nodes)
-    print("Total Nodes:" + str(len(nodes)))
 
     s_degrees = pd.Series(dict(G.degree()))
 
@@ -50,18 +48,21 @@ def trim_graph(G, con, frac_keep):
     # num_edges = int(np.log(len(s_degrees)))/min_edge_factor
     # print('discading nodes with fewer than ' + str(num_edges) + ' edges')
 
-    n_most_connected = 10000
-    s_degrees = s_degrees.sort_values(ascending=False)[0:n_most_connected]
+    #First downselect to a given most connected. Speeds up looking through database to get citation counts 
+    s_degrees = s_degrees.sort_values(ascending=False)[0:n_initial_trim]
 
+    #only keep papers in database adn get the fraction of edges/(total in and out citations) for each publication
     df_all = load_df_semantic(con, s_degrees.index)
     n_citations = df_all['inCitations'].apply(len) + df_all['outCitations'].apply(len) 
-
     s_degrees = s_degrees.loc[n_citations.index] # Some edges are not in database
-    print("Before fractional drop: " + str(len(s_degrees)))
-
-    frac_keep = 0.05
     frac_connected = s_degrees/n_citations
-    print('discading nodes with fewer than ' + str(frac_keep) + ' edges')
+    
+    avg_connected_frac = frac_connected.mean()
+    print("Size after database checking: {}".format(len(s_degrees)))
+    print("Average connected fraction: {:.3f}".format(avg_connected_frac))
+
+    frac_keep = avg_connected_frac*frac_keep_factor
+    print('discading nodes with fewer than {:.3f} fraction connected edges'.format(frac_keep))
 
     s_degrees = s_degrees.where(frac_connected > frac_keep).dropna()
     print("After trimming edges: " + str(len(s_degrees)))
@@ -69,18 +70,10 @@ def trim_graph(G, con, frac_keep):
 
     return G.subgraph(s_degrees.index)
 
-if __name__ == '__main__':
-    import sqlite3
-
-    db_path = r'C:\Users\aspit\Git\MLEF-Energy-Storage\semantic_opencorpus\data\soc.db'
-    con = sqlite3.connect(db_path)
-
-    test_id = 'fe09b0eee943efef3cdc3ec14db772fc400c6c08'
-
-    df = load_df_semantic(con, [test_id])
+def build_citation_community(df, con, n_iter=1,frac_keep_factor=1, n_initial_trim=20000):
 
     df_temp = df
-    for i in range(2):
+    for i in range(n_iter):
         print('---Step {}---'.format(i))
         print("Before graph generation: " +str(len(df_temp)))
 
@@ -88,12 +81,27 @@ if __name__ == '__main__':
         print("After Graph Generation: " + str(len(G.nodes)))
 
         if i > 0:
-            G = trim_graph(G, con, 0.5)
+            G = trim_graph(G, con, frac_keep_factor, n_initial_trim)
 
         df_2 = load_df_semantic(con, list(G.nodes))
         df_temp = pd.concat([df_temp, df_2])
         df_temp = df_temp.loc[~df_temp.index.duplicated()]
 
+    return df_temp
+
+if __name__ == '__main__':
+    import sqlite3
+
+    db_path = r'C:\Users\aspit\Git\MLEF-Energy-Storage\semantic_opencorpus\data\soc.db'
+    con = sqlite3.connect(db_path)
+
+    test_ids = [
+        'fe09b0eee943efef3cdc3ec14db772fc400c6c08',
+    ]
+
+    df = load_df_semantic(con, test_ids)
+
+    build_citation_community(df, con, n_iter=10, frac_keep_factor=0.5, n_initial_trim=20000)
 
 
 
