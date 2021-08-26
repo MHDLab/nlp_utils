@@ -79,17 +79,21 @@ if __name__ == '__main__':
 
     df = load_df_semantic(con, [test_id])
 
-    df_cits = get_citations(con, df)
-    
-    G = gen_citation_graph(df_cits)
+    df_temp = df
+    for i in range(2):
+        print('---Step {}---'.format(i))
+        print("Before graph generation: " +str(len(df_temp)))
 
-    df_all = load_df_semantic(con, list(G.nodes))
-    n_citations = df_all['inCitations'].apply(len) + df_all['outCitations'].apply(len) 
+        G = gen_citation_graph(df_temp)
+        print("After Graph Generation: " + str(len(G.nodes)))
 
-    G = trim_graph(G, n_citations, 0.2, 1000)
+        if i > 0:
+            G = trim_graph(G, con, 0.5)
 
-    df_comm = load_df_semantic(con, list(G.nodes)) # I Don't think this is necessary anymore
-    print("Existing in database " + str(len(df_comm)))
+        df_2 = load_df_semantic(con, list(G.nodes))
+        df_temp = pd.concat([df_temp, df_2])
+        df_temp = df_temp.loc[~df_temp.index.duplicated()]
+
 
 
 
