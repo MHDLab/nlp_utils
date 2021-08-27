@@ -8,23 +8,30 @@ from tmtoolkit.topicmod.model_stats import topic_word_relevance
 from tmtoolkit.bow.bow_stats import doc_lengths
 
 
-def gensim_bigram(texts, bigram_kwargs, fixed_bigrams = None):
-    bigram = gensim.models.Phrases(texts, **bigram_kwargs)
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class Gensim_Bigram_Transformer(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, texts, bigram_kwargs, fixed_bigrams = None, y=None):
+        bigram = gensim.models.Phrases(texts, **bigram_kwargs)
+
+        self.bigram_mod = bigram.freeze()
+
+        #https://github.com/RaRe-Technologies/gensim/issues/1465#issuecomment-706620266
+        if fixed_bigrams is not None:
+            for fixed_bigram in fixed_bigrams:
+                self.bigram_mod.phrasegrams[fixed_bigram] = float('inf')
+
+        return self
+    
+    def transform(self, texts):
+        for text in texts:
+            yield self.bigram_mod[text]
 
 
-    bigram_mod = bigram.freeze()
-
-    #alias of gensim.models.phrases.FrozenPhrases
-    # bigram_mod = gensim.models.phrases.Phraser(bigram)
-
-    #https://github.com/RaRe-Technologies/gensim/issues/1465#issuecomment-706620266
-    if fixed_bigrams is not None:
-        for fixed_bigram in fixed_bigrams:
-            bigram_mod.phrasegrams[fixed_bigram] = float('inf')
-
-    texts_bigram = [bigram_mod[doc] for doc in texts]
-
-    return texts_bigram
+        
 
 def basic_gensim_lda(texts, lda_kwargs):
     id2word = gensim.corpora.Dictionary(texts)
@@ -45,7 +52,7 @@ def gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs):
 
     bigram_kwargs and lda_kwargs are dictionaries for the bigram phraser and LDA model generation. 
     """
-
+    #TODO: update to use class above
     texts_bigram = gensim_bigram(texts, bigram_kwargs)
     id2word, data_words, lda_model = basic_gensim_lda(texts, lda_kwargs)
     
