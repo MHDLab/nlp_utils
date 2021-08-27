@@ -11,25 +11,28 @@ from tmtoolkit.bow.bow_stats import doc_lengths
 from sklearn.base import BaseEstimator, TransformerMixin
 
 class Gensim_Bigram_Transformer(BaseEstimator, TransformerMixin):
-    def __init__(self):
-        pass
+    def __init__(self, bigram_kwargs, fixed_bigrams = None):
+        self.bigram_kwargs = bigram_kwargs
+        self.fixed_bigrams = fixed_bigrams
 
-    def fit(self, texts, bigram_kwargs, fixed_bigrams = None, y=None):
-        bigram = gensim.models.Phrases(texts, **bigram_kwargs)
+    def fit(self, texts, y=None):
+        bigram = gensim.models.Phrases(texts, **self.bigram_kwargs)
 
         self.bigram_mod = bigram.freeze()
 
         #https://github.com/RaRe-Technologies/gensim/issues/1465#issuecomment-706620266
-        if fixed_bigrams is not None:
-            for fixed_bigram in fixed_bigrams:
+        if self.fixed_bigrams is not None:
+            for fixed_bigram in self.fixed_bigrams:
                 self.bigram_mod.phrasegrams[fixed_bigram] = float('inf')
 
         return self
     
     def transform(self, texts):
+        texts_out = [] #TODO: cant chain in pipeline using yield...
         for text in texts:
-            yield self.bigram_mod[text]
+            texts_out.append(self.bigram_mod[text])
 
+        return texts_out
 
         
 

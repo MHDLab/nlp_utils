@@ -29,19 +29,20 @@ def stopword_removal(text, stopwords):
 
 class TextNormalizer(BaseEstimator, TransformerMixin):
 
-    def __init__(self):
+    def __init__(self, post_stopwords = None):
         self.stopwords = stopwords.words('english')
-        self.post_stopwords = None #remove at the end
+        self.post_stopwords = post_stopwords #remove at the end
 
         self.materials_text_processor = MaterialsTextProcessor()
 
         # self.wn_lemmatizer = WordNetLemmatizer()
         self.porter_stemmer = PorterStemmer()
 
-    def fit(self, X, y=None):
+    def fit(self, texts, y=None):
         return self
     
     def transform(self, texts):
+        texts_out = [] #TODO: Can't chain in pipeline using yield...
         for text in texts:
             text = self.normalize(text)
 
@@ -54,7 +55,8 @@ class TextNormalizer(BaseEstimator, TransformerMixin):
             if self.post_stopwords is not None:
                 text = [t for t in text if t not in self.post_stopwords]
 
-            yield text
+            texts_out.append(text)
+        return texts_out
 
 
     def normalize(self, text):
