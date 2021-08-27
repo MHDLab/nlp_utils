@@ -48,6 +48,16 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
 
     return df
 
+def get_column_as_list(con, col_name, table_name):
+    """
+    returns a column from the database parsing as a list
+    """
+
+    ids = con.execute("select \"{}\" from {}".format(col_name, table_name)).fetchall()
+    ids = [i[0] for i in ids if i[0] != None]
+
+    return ids
+
 def load_df_MA(db_path):
     con = sqlite3.connect(db_path)
     cursor = con.cursor()
