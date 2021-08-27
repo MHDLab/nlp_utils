@@ -31,7 +31,7 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 sys.path.append(r'C:\Users\aspit\Git\MLEF-Energy-Storage\ES_TextData\mat2vec')
 from mat2vec.processing import MaterialsTextProcessor
-from . import text_analysis
+import text_analysis
 
 def text_processing_pipeline(docs, debug = False):
 
@@ -89,3 +89,49 @@ def text_processing_pipeline(docs, debug = False):
     return texts
 
 
+from sklearn.base import BaseEstimator, TransformerMixin
+from nltk.corpus import stopwords
+import string
+
+class TextNormalizer(BaseEstimator, TransformerMixin):
+
+    def __init__(self):
+        self.stopwords = stopwords.words('english')
+        pass
+
+    def fit(self, X, y=None):
+        return self
+    
+    def transform(self, texts):
+        for text in texts:
+            yield self.normalize(text)
+
+    def normalize(self, text):
+        return [word.lower() for word in text if word.lower() not in self.stopwords]
+
+if __name__ == '__main__':
+
+    import sqlite3
+    import os
+    from nlp_utils.fileio import load_df_semantic
+
+    DATASET_DIR = r'C:\Users\aspit\Git\NLP-Semantic\datasets'
+    db_path = os.path.join(DATASET_DIR, 'soc.db')
+
+    #Get IDS
+    con = sqlite3.connect(db_path)
+    cursor = con.cursor()
+    results = cursor.execute("SELECT id FROM raw_text LIMIT 1").fetchall()
+
+    ids = [t[0] for t in results]
+
+    df = load_df_semantic(con, ids)      
+    docs = df['title'] + ' ' + df['paperAbstract']
+    texts = docs.apply(str.split)
+
+
+    print("Before")
+    print(texts.values)
+    textnorm = TextNormalizer()
+    print("After")
+    print(list(textnorm.transform(texts)))
