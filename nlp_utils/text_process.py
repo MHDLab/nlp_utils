@@ -7,6 +7,18 @@ texts: list of string words for each document
 corpus: digitized bag of words for
 """
 
+import sys
+import string
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+sys.path.append(r'C:\Users\aspit\Git\MLEF-Energy-Storage\ES_TextData\mat2vec')
+from mat2vec.processing import MaterialsTextProcessor
+
+from sklearn.base import BaseEstimator, TransformerMixin
+from nltk.corpus import stopwords
+import string
+from nltk.tokenize import word_tokenize
+
 def stopword_removal(text, stopwords):
     text_out = []
     for word in text:   
@@ -15,99 +27,50 @@ def stopword_removal(text, stopwords):
     
     return text_out
 
-def apply_fn_text(text, fn, **kwargs):
-    """applies a function to each word of a text (list of words)"""
-    text_out = []
-
-    for word in text:
-        word = fn(word, **kwargs)
-        text_out.append(word)     
-
-    return text_out
-
-import sys
-import string
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer, WordNetLemmatizer
-sys.path.append(r'C:\Users\aspit\Git\MLEF-Energy-Storage\ES_TextData\mat2vec')
-from mat2vec.processing import MaterialsTextProcessor
-import text_analysis
-
-def text_processing_pipeline(docs, debug = False):
-
-    #TODO: combine with punctuation below. Found it would only get isolated punct, not like "however,"
-    for punct in string.punctuation.replace('-',''):
-        docs = docs.apply(lambda x: x.replace(punct,''))
-
-    docs = docs.apply(lambda x: x.replace('-', '_'))
-
-    #TODO: figure out encoding...this is a 'long hyphen'
-    #https://stackoverflow.com/questions/19149577/python-replace-long-dash-with-short-dash
-    docs = docs.apply(lambda x: x.replace(b'\xe2\x80\x93'.decode('utf-8'), '_'))
-
-    texts = docs.apply(str.split)
-
-    print('Removing stopwords')
-    en_stopwords  = stopwords.words('english')
-    all_stops = set(en_stopwords) | set(string.punctuation)
-
-    texts = texts.apply(lambda x: stopword_removal(x, all_stops))
-
-    if debug: print([w[0] for w in text_analysis.top_words(texts, num_words=30)])
-
-
-    print('Running Mat2Vec text processing')
-    # Basic code for implementing mat2vec. need to initialize the mat2vec repo git submodule in the ES_TextData folder. This replaces numbers with the string '<nUm>' which I have not implemented code to remove. 
-    materials_text_processor = MaterialsTextProcessor()
-
-    texts = texts.apply(
-        lambda x: materials_text_processor.process(x, exclude_punct=True, replace_elements = True)[0]
-    )
-
-    # mat2vec replaces numbers with '<nUm>', so remove this from the texts. 
-    texts = texts.apply(lambda x: [t for t in x if t != '<nUm>'])
-
-    if debug: print([w[0] for w in text_analysis.top_words(texts, num_words=30)])
-
-    print('Performing Lemmatization')
-
-    #Use lemmatizer to keep words readable and potentially improve modeling. At the cost of speed.
-    wn_lemmatizer = WordNetLemmatizer()
-
-    texts = texts.apply(lambda x: apply_fn_text(x, wn_lemmatizer.lemmatize))
-
-    if debug: print([w[0] for w in text_analysis.top_words(texts, num_words=30)])
-
-    print("Performing Porter Stemming")
-    ## Porter stemming is more extreme than lemmatization and really makes different forms of words the same, but those root forms can be hard to read. 
-    porter_stemmer = PorterStemmer()
-
-    texts = texts.apply(lambda x: apply_fn_text(x, porter_stemmer.stem))
-
-    if debug: print([w[0] for w in text_analysis.top_words(texts, num_words=30)])
-
-    return texts
-
-
-from sklearn.base import BaseEstimator, TransformerMixin
-from nltk.corpus import stopwords
-import string
-
 class TextNormalizer(BaseEstimator, TransformerMixin):
 
     def __init__(self):
         self.stopwords = stopwords.words('english')
-        pass
+        self.post_stopwords = None #remove at the end
+
+        self.materials_text_processor = MaterialsTextProcessor()
+
+        # self.wn_lemmatizer = WordNetLemmatizer()
+        self.porter_stemmer = PorterStemmer()
 
     def fit(self, X, y=None):
         return self
     
     def transform(self, texts):
         for text in texts:
-            yield self.normalize(text)
+            text = self.normalize(text)
+
+            text = self.materials_text_processor.process(text, exclude_punct=True, replace_elements = True)[0]
+            text = [t for t in text if t != '<nUm>']
+
+            #Porter stemmer removes capitalization...
+            text = [self.porter_stemmer.stem(t) for t in text]
+
+            if self.post_stopwords is not None:
+                text = [t for t in text if t not in self.post_stopwords]
+
+            yield text
+
 
     def normalize(self, text):
-        return [word.lower() for word in text if word.lower() not in self.stopwords]
+        translator = str.maketrans('','',string.punctuation.replace('-',''))
+        text_out = []
+
+        for word in text:
+            if word.lower() not in self.stopwords:
+                word = word.translate(translator)
+                word = word.replace(b'\xe2\x80\x93'.decode('utf-8'), '_').replace('-','_')
+                if len(word): #TODO: figure out how to remove in one step
+                    text_out.append(word)
+        
+        return text_out
+
+
 
 if __name__ == '__main__':
 
@@ -119,13 +82,11 @@ if __name__ == '__main__':
     db_path = os.path.join(DATASET_DIR, 'soc.db')
 
     #Get IDS
+    id = '767fa9da3adf2aed0acdaea699ac8783c7859b0f'
     con = sqlite3.connect(db_path)
     cursor = con.cursor()
-    results = cursor.execute("SELECT id FROM raw_text LIMIT 1").fetchall()
 
-    ids = [t[0] for t in results]
-
-    df = load_df_semantic(con, ids)      
+    df = load_df_semantic(con, [id])      
     docs = df['title'] + ' ' + df['paperAbstract']
     texts = docs.apply(str.split)
 
