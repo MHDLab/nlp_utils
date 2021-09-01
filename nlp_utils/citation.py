@@ -37,7 +37,7 @@ def gen_citation_graph(df):
 
     return G
 
-def trim_graph(G, con, frac_keep_factor =1, n_initial_trim = 10000):
+def trim_graph(G, con, frac_keep_factor =1, n_trim = 10000):
     """
     removes nodes with fewer than a given number of edges
     """
@@ -49,7 +49,7 @@ def trim_graph(G, con, frac_keep_factor =1, n_initial_trim = 10000):
     # print('discading nodes with fewer than ' + str(num_edges) + ' edges')
 
     #First downselect to a given most connected. Speeds up looking through database to get citation counts 
-    s_degrees = s_degrees.sort_values(ascending=False)[0:n_initial_trim]
+    s_degrees = s_degrees.sort_values(ascending=False)[0:n_trim]
 
     #only keep papers in database adn get the fraction of edges/(total in and out citations) for each publication
     df_all = load_df_semantic(con, s_degrees.index)
@@ -70,7 +70,7 @@ def trim_graph(G, con, frac_keep_factor =1, n_initial_trim = 10000):
 
     return G.subgraph(s_degrees.index)
 
-def build_citation_community(df, con, n_iter=1,frac_keep_factor=1, n_initial_trim=20000):
+def build_citation_community(df, con, n_iter=1,frac_keep_factor=1, n_trim=20000):
 
     df_temp = df
     for i in range(n_iter):
@@ -81,7 +81,7 @@ def build_citation_community(df, con, n_iter=1,frac_keep_factor=1, n_initial_tri
         print("After Graph Generation: " + str(len(G.nodes)))
 
         if i > 0:
-            G = trim_graph(G, con, frac_keep_factor, n_initial_trim)
+            G = trim_graph(G, con, frac_keep_factor, n_trim)
 
         df_2 = load_df_semantic(con, list(G.nodes))
         df_temp = pd.concat([df_temp, df_2])
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
     df = load_df_semantic(con, test_ids)
 
-    build_citation_community(df, con, n_iter=10, frac_keep_factor=0.5, n_initial_trim=20000)
+    build_citation_community(df, con, n_iter=10, frac_keep_factor=0.5, n_trim=20000)
 
 
 
