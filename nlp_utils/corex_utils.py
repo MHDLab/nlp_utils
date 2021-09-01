@@ -2,10 +2,12 @@ import numpy as np
 import pandas as pd
 
 
-def get_s_topic_words(topic_model, topic_names, n_words = 6):
+def get_s_topic_words(topic_model, n_words = 6):
     """
     CorEx also returns the "sign" of each word, which is either 1 or -1. If the sign is -1, then that means the absence of a word is informative in that topic, rather than its presence.
     """
+
+    topic_names = ['topic_' + str(i) for i in range(topic_model.n_hidden)]
     s_topic_words = pd.Series(index=topic_names, dtype=str)
 
     topics = topic_model.get_topics(n_words)

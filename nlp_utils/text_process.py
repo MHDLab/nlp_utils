@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     import sqlite3
     import os
-    from nlp_utils.fileio import load_df_semantic
+    from nlp_utils.io import load_df_semantic
 
     DATASET_DIR = r'C:\Users\aspit\Git\NLP-Semantic\datasets'
     db_path = os.path.join(DATASET_DIR, 'soc.db')

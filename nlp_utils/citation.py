@@ -2,7 +2,7 @@
 functions for generating citation trees/graphs etc. 
 """
 
-from nlp_utils.fileio import load_df_semantic
+from nlp_utils.io import load_df_semantic
 import pandas as pd
 import networkx as nx
 import numpy as np

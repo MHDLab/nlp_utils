@@ -42,6 +42,9 @@ def calc_topics_year(df_doc_topic_probs, s_year, norm_each_topic=True):
         for topic_id in df_topicsyear:
             df_topicsyear[topic_id] = df_topicsyear[topic_id]/sum(df_topicsyear[topic_id])
 
+    df_topicsyear.index = df_topicsyear.index.astype(int)
+    df_topicsyear = df_topicsyear.sort_index()
+
     return df_topicsyear
 
 def fit_topic_year(df_topicsyear, year_range = None):
@@ -58,5 +61,7 @@ def fit_topic_year(df_topicsyear, year_range = None):
         m, b = np.polyfit(x=s_time_fit.index, y=s_time_fit.values, deg=1)
         df_fit_params.loc[topic_id]['slope'] = m
         df_fit_params.loc[topic_id]['offset'] = b
+
+    df_fit_params = df_fit_params.astype(float)
 
     return df_fit_params 
