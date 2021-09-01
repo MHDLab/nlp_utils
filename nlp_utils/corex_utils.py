@@ -8,7 +8,7 @@ def get_s_topic_words(topic_model, topic_names, n_words = 6):
     """
     s_topic_words = pd.Series(index=topic_names, dtype=str)
 
-    topics = topic_model.get_topics()
+    topics = topic_model.get_topics(n_words)
     for i,topic in enumerate(topics):
         topic_name = 'topic_' + str(i)
         outstr = ''
