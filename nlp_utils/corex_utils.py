@@ -31,3 +31,17 @@ def print_top_docs(topic_model, titles):
         docs = [str(titles[d])[0:100] for d in docs]
         topic_str = str(topic_n+1)+': \n'+',\n'.join(docs)
         print(topic_str)
+
+
+def anchors_to_fixed_bigrams(anchor_words):
+    fixed_bigrams = []
+
+    for word in anchor_words:
+        if type(word) == list:
+                fixed_bigrams.extend(word)
+        else:
+            fixed_bigrams.append(word)
+
+    fixed_bigrams = [w for w in fixed_bigrams if '_' in w]
+
+    return fixed_bigrams 
