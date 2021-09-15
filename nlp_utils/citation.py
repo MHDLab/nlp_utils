@@ -6,6 +6,7 @@ from nlp_utils.io import load_df_semantic
 import pandas as pd
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 
 def get_citations(con, df):
@@ -22,9 +23,7 @@ def get_citations(con, df):
 
     return df_both
 
-def gen_citation_graph(df):
-    G = nx.Graph()
-    G.add_nodes_from(df.index.values)
+def gen_citation_tree(G, df):
 
     for idx, row in df.iterrows():
         cits = row['inCitations']
@@ -34,43 +33,53 @@ def gen_citation_graph(df):
         cits = row['outCitations']
         for cit in cits:
             G.add_edge(idx, cit)
-
+    
     return G
 
-def trim_graph(G, con, frac_keep_factor =1, n_trim = 10000, min_connect=0):
+def get_frac_connected(G, con, drop_nonexist = True):
+    #get the fraction of edges/(total in and out citations) for each publication
+    df_all = load_df_semantic(con, list(G.nodes))
+    n_citations = df_all['inCitations'].apply(len) + df_all['outCitations'].apply(len) 
+
+    #only keep papers in database 
+    if drop_nonexist:
+        G = G.subgraph(n_citations.index)
+
+    #perhaps theres a more efficient way of doing this
+    for node in G.nodes:
+        G.nodes[node]['total_cits'] = n_citations[node]
+        G.nodes[node]['frac_connected'] = G.degree()[node]/n_citations[node]
+        
+    return G
+
+
+def trim_graph(G, frac_keep_factor =1, n_trim = 10000, min_connect=0):
     """
     removes nodes with fewer than a given number of edges
     """
-
-    s_degrees = pd.Series(dict(G.degree()))
-
-    ## Old method
-    # num_edges = int(np.log(len(s_degrees)))/min_edge_factor
-    # print('discading nodes with fewer than ' + str(num_edges) + ' edges')
-
-    #First downselect to a given most connected. Speeds up looking through database to get citation counts 
-    s_degrees = s_degrees.sort_values(ascending=False)[0:n_trim]
     
-    s_degrees = s_degrees.where(s_degrees>min_connect).dropna()
+    frac_connected = pd.Series(nx.get_node_attributes(G, 'frac_connected'))
 
-    #only keep papers in database adn get the fraction of edges/(total in and out citations) for each publication
-    df_all = load_df_semantic(con, s_degrees.index)
-    n_citations = df_all['inCitations'].apply(len) + df_all['outCitations'].apply(len) 
-    s_degrees = s_degrees.loc[n_citations.index] # Some edges are not in database
-    frac_connected = s_degrees/n_citations
-    
     avg_connected_frac = frac_connected.mean()
-    print("Size after database checking: {}".format(len(s_degrees)))
+    print("Size after database checking: {}".format(len(frac_connected)))
     print("Average connected fraction: {:.3f}".format(avg_connected_frac))
 
     frac_keep = avg_connected_frac*frac_keep_factor
     print('discading nodes with fewer than {:.3f} fraction connected edges'.format(frac_keep))
 
-    s_degrees = s_degrees.where(frac_connected > frac_keep).dropna()
-    print("After trimming edges: " + str(len(s_degrees)))
+    frac_connected = frac_connected.where(frac_connected > frac_keep).dropna()
+    print("After trimming edges: " + str(len(frac_connected)))
  
+    G = G.subgraph(frac_connected.index)
+    G = nx.Graph(G)
 
-    return G.subgraph(s_degrees.index)
+    s_degrees = pd.Series(dict(G.degree()))
+    s_degrees = s_degrees.where(s_degrees>min_connect).dropna()
+    G = G.subgraph(s_degrees.index)
+
+    print("After removing min count: " + str(len(s_degrees)))
+
+    return G
 
 def build_citation_community(df, con, n_iter=1,frac_keep_factor=1, n_trim=20000):
 
