@@ -37,7 +37,7 @@ def gen_citation_graph(df):
 
     return G
 
-def trim_graph(G, con, frac_keep_factor =1, n_initial_trim = 10000):
+def trim_graph(G, con, frac_keep_factor =1, n_initial_trim = 10000, min_connect=0):
     """
     removes nodes with fewer than a given number of edges
     """
@@ -50,6 +50,8 @@ def trim_graph(G, con, frac_keep_factor =1, n_initial_trim = 10000):
 
     #First downselect to a given most connected. Speeds up looking through database to get citation counts 
     s_degrees = s_degrees.sort_values(ascending=False)[0:n_initial_trim]
+    
+    s_degrees = s_degrees.where(s_degrees>min_connect).dropna()
 
     #only keep papers in database adn get the fraction of edges/(total in and out citations) for each publication
     df_all = load_df_semantic(con, s_degrees.index)
