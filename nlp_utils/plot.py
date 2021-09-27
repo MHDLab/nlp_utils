@@ -102,7 +102,7 @@ from textwrap import wrap
 from .common import fit_topic_year
 
 
-def top_slopes_plot(df_topicsyear, topic_strs, year_range_fit, n_plots = 5, ascending=False):
+def top_slopes_plot(df_topicsyear, topic_strs, year_range_fit, n_plots = 5, ascending=False, highlight_topics=[]):
     col_wrap = 5
     
     df_fit_params  = fit_topic_year(df_topicsyear, year_range_fit)
@@ -130,7 +130,11 @@ def top_slopes_plot(df_topicsyear, topic_strs, year_range_fit, n_plots = 5, asce
         #Annotation
         t_w = topic_strs.loc[topic_id]
         t_w = "\n".join(wrap(t_w, width = 30))
-        axes[row][col].set_title(topic_id + ": " + t_w)
+        title_obj = axes[row][col].set_title(topic_id + ": " + t_w)
+
+        if topic_id in highlight_topics:
+            plt.setp(title_obj, color='r')
+
 
     current_ylim = axes[0][0].get_ylim()
     for ax in axes.flatten():
