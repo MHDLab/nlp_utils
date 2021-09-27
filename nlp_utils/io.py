@@ -2,6 +2,34 @@ import sqlite3
 import os
 import pandas as pd
 
+def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit):
+    """
+    For each regular expression search if it exists in any of the search_fields
+    """
+    cursor = con.cursor()
+
+    # put -- to comment out line
+    execute_str = """
+        SELECT {} FROM
+        --raw_text
+        (SELECT * FROM raw_text LIMIT {})
+        WHERE {} LIKE '{}'
+    """.format(idx_name, search_limit, search_fields[0], regex)
+
+    for search_field in search_fields[1:]:
+        execute_str = execute_str + " OR {} like '{}'".format(search_field, regex)
+
+    cursor.execute(execute_str)
+    ## Just get count, seems to take as long. 
+    # cursor.execute("SELECT COUNT(*) FROM raw_text WHERE abstract LIKE '%flywheel energy storage%'")
+
+    results = cursor.fetchall()
+
+    print("Num Results: " + str(len(results)))
+
+    ids = [r[0] for r in results]
+
+    return ids
 
 
 def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
@@ -75,6 +103,13 @@ def load_df_MA(db_path):
     return df_out 
 
 if __name__ == '__main__':
-    data_folder = r'C:\Users\aspit\Git\MHDLab-Projects\Energy Storage\data'
 
-    df = load_df(os.path.join(data_folder, 'nlp_justenergystorage_100.db'))
+    db_folder = r'E:\\'
+
+    con = sqlite3.connect(os.path.join(db_folder, 'soc.db'))
+
+    regex = '%energy storage%'
+    ids = gen_ids_searchterm(con, regex, idx_name='id', search_fields=['paperAbstract', 'title'], search_limit=int(1e4))
+
+    df = load_df_semantic(con, ids)
+    print(df.head())
