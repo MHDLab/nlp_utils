@@ -45,3 +45,35 @@ def anchors_to_fixed_bigrams(anchor_words):
     fixed_bigrams = [w for w in fixed_bigrams if '_' in w]
 
     return fixed_bigrams 
+
+from .gensim_utils import calc_cov
+import xarray as xr
+
+def calc_cov_corex(topic_model, topic_names, doc_names):
+    """
+    calculate the covariance matrix (topic coocurence) used to define the edges in the graph
+    see here:  https://www.aclweb.org/anthology/W14-3112.pdf
+    """
+
+    doc_topic_prob = topic_model.p_y_given_x
+
+    n_topics = doc_topic_prob.shape[1]
+    n_docs = doc_topic_prob.shape[0]
+    
+    da_doc_topic = xr.DataArray(doc_topic_prob, coords= {'topic': topic_names, 'doc' : doc_names}, dims = ['doc', 'topic'])
+
+    #Normalize so each topic has total probability one (what does this do in combination with below?)
+    theta_ij = da_doc_topic/da_doc_topic.sum('doc')
+
+    #Then normalize so each document has total probability 1
+    gamma_di = theta_ij/theta_ij.sum('topic')
+
+    gamma_i = (1/n_docs)*gamma_di.sum('doc')
+    gamma_di_sub = gamma_di - gamma_i
+
+    sigma = calc_cov(gamma_di_sub.values)
+
+    da_sigma = xr.DataArray(sigma, coords = {'topic_i': topic_names, 'topic_j': topic_names}, dims = ['topic_i', 'topic_j'])
+
+    return da_sigma, da_doc_topic
+
