@@ -86,7 +86,8 @@ def gensim_topic_info(lda_model, data_words, id2word, lambda_=0.6):
     topic_word_rel = topic_word_relevance(topic_term, doc_topic_probs, doc_l, lambda_=lambda_)
     df_topickeywords = ldamodel_top_topic_words(topic_word_rel, vocab, top_n=10, val_fmt=r"{lbl}")
 
-    return df_topickeywords, doc_topic_probs
+    df_doc_topic_probs = pd.DataFrame(doc_topic_probs, columns=df_topickeywords.index, )
+    return df_topickeywords, df_doc_topic_probs 
 
 def gensim_edge_info(lda_model, data_words, id2word, doc_topic_probs, lambda_=0.6):
     """
@@ -121,7 +122,9 @@ def gensim_edge_info(lda_model, data_words, id2word, doc_topic_probs, lambda_=0.
     edge_word_rel = topic_word_relevance(edge_term, doc_edge_probs, doc_l, lambda_=lambda_) #identify the most relevant word accounting for marginal probabilities, shape (num_topics, vocabulary_size)
     df_edgekeywords = ldamodel_top_topic_words(edge_word_rel, vocab, top_n=10, row_labels=row_labels, val_fmt=r"{lbl}")
 
-    return df_edgekeywords, doc_edge_probs
+    df_doc_edge_probs = pd.DataFrame(doc_edge_probs, columns=df_edgekeywords.index, )
+
+    return df_edgekeywords, df_doc_edge_probs 
 
 def bigram_stats(data_words, id2word):
     vocab, docl = get_vocab_docl(data_words, id2word)
