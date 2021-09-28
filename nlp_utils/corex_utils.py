@@ -77,3 +77,42 @@ def calc_cov_corex(topic_model, topic_names, doc_names):
 
     return da_sigma, da_doc_topic
 
+
+def corex_edge_info(doc_topic_probs):
+    """
+    Extracts the top papers for each set of two topics of a corex model. words belong to only one topic so it's not clear how to get edge keywords yet, so a dummy keyword dataframe is returned for now. 
+    """
+    num_docs = doc_topic_probs.shape[0]
+    num_topics = doc_topic_probs.shape[1]
+    
+    #create new matrixes for the 3D data
+    # edge_term = np.ndarray((num_topics, num_topics, num_words))
+    doc_edge_probs = np.ndarray((num_docs, num_topics, num_topics))
+    row_labels = []
+
+    #fill the matrices and then reduced to 2D
+    for t1 in range(num_topics):
+        for t2 in range(num_topics):
+            row_labels.append('topic_'+str(t1)+ ', topic_'+str(t2))
+            if t1 == t2:
+                doc_edge_probs[:, t1, t2] = np.zeros((num_docs))
+            else:
+                doc_edge_probs[:, t1, t2] = doc_topic_probs[:,t1] * doc_topic_probs[:,t2]
+    doc_edge_probs = np.reshape(doc_edge_probs, (num_docs, num_topics**2))
+
+    
+    #Make a dummy edge keyword. Kept method of making dummy for all ranks for reference. 
+    # TODO: figure out a way to get edge keywords or clean up below 
+    df_edgekeywords = pd.DataFrame(index=row_labels)
+    for i in range(1,11):
+        df_edgekeywords['rank_{}'.format(i)] = [" "]*len(row_labels)
+    df_edgekeywords.index.name = 'topic'
+
+    df_edgekeywords = df_edgekeywords[['rank_1']]
+    df_edgekeywords['rank_1'] = "Edge keywords are not available with CorEx topic model."
+
+    df_doc_edge_probs = pd.DataFrame(doc_edge_probs, columns=df_edgekeywords.index, )
+    df_doc_edge_probs = df_doc_edge_probs.div(df_doc_edge_probs.sum(axis=1), axis=0) # Normalize each edge...
+
+    return df_edgekeywords, df_doc_edge_probs 
+
