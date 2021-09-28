@@ -23,17 +23,38 @@ def get_citations(con, df):
 
     return df_both
 
-def gen_citation_tree(G, df):
-
+def gen_citation_tree(G, df, cit_field, only_existing=False):
+    """
+    adds edges for each citation in cit_field (inCitations, outCitations)
+    only_existing: only add edges for citations existing in original df
+    """
     for idx, row in df.iterrows():
-        cits = row['inCitations']
-        for cit in cits:
-            G.add_edge(idx, cit)
+        cits = row[cit_field]
+        if only_existing:
+            cits = [cit for cit in cits if cit in df.index]
 
-        cits = row['outCitations']
         for cit in cits:
             G.add_edge(idx, cit)
-    
+   
+    return G
+
+def trim_graph_size(G, max_size):
+    """
+    trims the graph down to a maximum size. papers with low numbers of degrees are dropped until the maximum number is reached. 
+    """
+    s_degrees = pd.Series(dict(G.degree()))
+
+    val_counts = s_degrees.value_counts().sort_index(ascending=False)
+    edges_cutoff = val_counts.where(val_counts.cumsum()<max_size).dropna().astype(int).index[-1]
+
+    print("removing all papers with less than {} edges to keep graph to size {}".format(edges_cutoff, max_size))
+    s_degrees = s_degrees.where(s_degrees>edges_cutoff).dropna()
+    # s_degrees.hist(bins=100)
+
+    G = G.subgraph(s_degrees.index)
+    print("after removing min connection: {}".format(len(G.nodes())))
+
+    G = nx.Graph(G)
     return G
 
 def get_frac_connected(G, con, drop_nonexist = True):
@@ -53,15 +74,15 @@ def get_frac_connected(G, con, drop_nonexist = True):
     return G
 
 
-def trim_graph(G, frac_keep_factor =1, n_trim = 10000, min_connect=0):
+def trim_graph_fraction(G, frac_keep_factor =1):
     """
-    removes nodes with fewer than a given number of edges
+    removes nodes with fewer than the average*frac_keep_factor fraction of connected edges
+    get_frac_connected must be run first... TODO: this should problably just be integrated into one funciton. 
     """
     
     frac_connected = pd.Series(nx.get_node_attributes(G, 'frac_connected'))
 
     avg_connected_frac = frac_connected.mean()
-    print("Size after database checking: {}".format(len(frac_connected)))
     print("Average connected fraction: {:.3f}".format(avg_connected_frac))
 
     frac_keep = avg_connected_frac*frac_keep_factor
@@ -73,32 +94,27 @@ def trim_graph(G, frac_keep_factor =1, n_trim = 10000, min_connect=0):
     G = G.subgraph(frac_connected.index)
     G = nx.Graph(G)
 
-    s_degrees = pd.Series(dict(G.degree()))
-    s_degrees = s_degrees.where(s_degrees>min_connect).dropna()
-    G = G.subgraph(s_degrees.index)
-
-    print("After removing min count: " + str(len(s_degrees)))
-
     return G
 
-def build_citation_community(df, con, n_iter=1,frac_keep_factor=1, n_trim=20000):
+##Obsolete, need to remake?
+# def build_citation_community(df, con, n_iter=1,frac_keep_factor=1, n_trim=20000):
 
-    df_temp = df
-    for i in range(n_iter):
-        print('---Step {}---'.format(i))
-        print("Before graph generation: " +str(len(df_temp)))
+#     df_temp = df
+#     for i in range(n_iter):
+#         print('---Step {}---'.format(i))
+#         print("Before graph generation: " +str(len(df_temp)))
 
-        G = gen_citation_graph(df_temp)
-        print("After Graph Generation: " + str(len(G.nodes)))
+#         G = gen_citation_graph(df_temp)
+#         print("After Graph Generation: " + str(len(G.nodes)))
 
-        if i > 0:
-            G = trim_graph(G, con, frac_keep_factor, n_trim)
+#         if i > 0:
+#             G = trim_graph(G, con, frac_keep_factor, n_trim)
 
-        df_2 = load_df_semantic(con, list(G.nodes))
-        df_temp = pd.concat([df_temp, df_2])
-        df_temp = df_temp.loc[~df_temp.index.duplicated()]
+#         df_2 = load_df_semantic(con, list(G.nodes))
+#         df_temp = pd.concat([df_temp, df_2])
+#         df_temp = df_temp.loc[~df_temp.index.duplicated()]
 
-    return df_temp
+#     return df_temp
 
 if __name__ == '__main__':
     import sqlite3
