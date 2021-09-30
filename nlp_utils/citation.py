@@ -66,7 +66,7 @@ def trim_graph_num_edges(G, min_edges):
 
     G = nx.Graph(G)
     return G
-    
+
 def trim_graph_size(G, max_size):
     """
     trims the graph down to a maximum size. papers with low numbers of degrees are dropped until the maximum number is reached. 
@@ -114,18 +114,21 @@ def trim_graph_fraction(G, max_size):
     keep = frac_connected.iloc[0:max_size]
     min_fraction = keep.iloc[-1]
     print('discading nodes with fewer than {:.3f} fraction connected edges'.format(min_fraction))
-
+ 
     G = G.subgraph(keep.index)
     G = nx.Graph(G)
 
     return G
 
-    frac_connected = frac_connected.where(frac_connected > frac_keep).dropna()
-    print("After trimming edges: " + str(len(frac_connected)))
- 
-    G = G.subgraph(frac_connected.index)
-    G = nx.Graph(G)
+def trim_connected_components(G, num_cc):
+    # Find connected components (islands) and keep the largest num_cc
+    cc= pd.Series(nx.connected_components(G))
+    cc_len = cc.apply(len).sort_values(ascending=False)
+    cc_keep = cc.loc[cc_len.iloc[0:num_cc].index]
+    ids_keep = set(set().union(*cc_keep.values))
 
+    G = G.subgraph(ids_keep)
+    G = nx.Graph(G)
     return G
 
 ##Obsolete, need to remake?
