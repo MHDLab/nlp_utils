@@ -53,6 +53,20 @@ def gen_citation_tree(G, con, cit_field, add_new=True):
 
     return G
 
+def trim_graph_num_edges(G, min_edges):
+    """
+    trims a graph, removing nodes with fewer than min_edges
+    """
+
+    print("removing all papers with less than {} edges".format(min_edges))
+    s_degrees = pd.Series(dict(G.degree()))
+    s_degrees = s_degrees.where(s_degrees>= min_edges).dropna()
+    G = G.subgraph(s_degrees.index)
+    print("after removing min connection: {}".format(len(G.nodes())))
+
+    G = nx.Graph(G)
+    return G
+    
 def trim_graph_size(G, max_size):
     """
     trims the graph down to a maximum size. papers with low numbers of degrees are dropped until the maximum number is reached. 
