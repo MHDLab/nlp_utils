@@ -23,19 +23,34 @@ def get_citations(con, df):
 
     return df_both
 
-def gen_citation_tree(G, df, cit_field, only_existing=False):
+
+from .io import load_df_semantic
+
+def gen_citation_tree(G, con, cit_field, add_new=True):
     """
     adds edges for each citation in cit_field (inCitations, outCitations)
-    only_existing: only add edges for citations existing in original df
+    add_new: add edges for citations not existing in original graph
+    remove_nodes_not_in_db: after growing citation graph, remove nodes that don't exist in database.
     """
+
+    current_ids = list(G.nodes())
+    df = load_df_semantic(con, current_ids)
+
+    #graph could include ids not in database, so iterate through df (those found in db)
     for idx, row in df.iterrows():
-        cits = row[cit_field]
-        if only_existing:
-            cits = [cit for cit in cits if cit in df.index]
+
+        if cit_field == 'both':
+            cits = row['inCitations']
+            cits.extend(row['outCitations'])
+        else:
+            cits = row[cit_field]
+
+        if not add_new:
+            cits = [cit for cit in cits if cit in current_ids]
 
         for cit in cits:
             G.add_edge(idx, cit)
-   
+
     return G
 
 def trim_graph_size(G, max_size):
