@@ -2,7 +2,7 @@ import sqlite3
 import os
 import pandas as pd
 
-def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit):
+def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit, output_limit):
     """
     For each regular expression search if it exists in any of the search_fields
     """
@@ -19,6 +19,7 @@ def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit):
     for search_field in search_fields[1:]:
         execute_str = execute_str + " OR {} like '{}'".format(search_field, regex)
 
+    execute_str = execute_str + ' LIMIT {}'.format(output_limit)
     cursor.execute(execute_str)
     ## Just get count, seems to take as long. 
     # cursor.execute("SELECT COUNT(*) FROM raw_text WHERE abstract LIKE '%flywheel energy storage%'")
