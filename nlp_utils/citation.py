@@ -103,19 +103,22 @@ def get_frac_connected(G, con, drop_nonexist = True):
     return G
 
 
-def trim_graph_fraction(G, frac_keep_factor =1):
+def trim_graph_fraction(G, max_size):
     """
     removes nodes with fewer than the average*frac_keep_factor fraction of connected edges
     get_frac_connected must be run first... TODO: this should problably just be integrated into one funciton. 
     """
     
-    frac_connected = pd.Series(nx.get_node_attributes(G, 'frac_connected'))
+    frac_connected = pd.Series(nx.get_node_attributes(G, 'frac_connected')).sort_values(ascending=False)
 
-    avg_connected_frac = frac_connected.mean()
-    print("Average connected fraction: {:.3f}".format(avg_connected_frac))
+    keep = frac_connected.iloc[0:max_size]
+    min_fraction = keep.iloc[-1]
+    print('discading nodes with fewer than {:.3f} fraction connected edges'.format(min_fraction))
 
-    frac_keep = avg_connected_frac*frac_keep_factor
-    print('discading nodes with fewer than {:.3f} fraction connected edges'.format(frac_keep))
+    G = G.subgraph(keep.index)
+    G = nx.Graph(G)
+
+    return G
 
     frac_connected = frac_connected.where(frac_connected > frac_keep).dropna()
     print("After trimming edges: " + str(len(frac_connected)))
