@@ -73,6 +73,7 @@ def trim_graph_size(G, max_size):
     """
     s_degrees = pd.Series(dict(G.degree()))
 
+
     val_counts = s_degrees.value_counts().sort_index(ascending=False)
     edges_cutoff = val_counts.where(val_counts.cumsum()<max_size).dropna().astype(int).index[-1]
 
@@ -86,20 +87,23 @@ def trim_graph_size(G, max_size):
     G = nx.Graph(G)
     return G
 
-def get_frac_connected(G, con, drop_nonexist = True):
+def get_citation_info(G, con, drop_nonexist = True):
     #get the fraction of edges/(total in and out citations) for each publication
     df_all = load_df_semantic(con, list(G.nodes))
-    n_citations = df_all['inCitations'].apply(len) + df_all['outCitations'].apply(len) 
+    inCitations = df_all['inCitations'].apply(len)
+    outCitations = df_all['outCitations'].apply(len) 
+    years_ago = df_all['years_ago']
 
     #only keep papers in database 
     if drop_nonexist:
-        G = G.subgraph(n_citations.index)
+        G = G.subgraph(df_all.index)
 
     #perhaps theres a more efficient way of doing this
     for node in G.nodes:
-        G.nodes[node]['total_cits'] = n_citations[node]
-        G.nodes[node]['frac_connected'] = G.degree()[node]/n_citations[node]
-        
+        G.nodes[node]['inCitations'] = inCitations[node]
+        G.nodes[node]['outCitations'] = outCitations[node]
+        G.nodes[node]['frac_connected'] = G.degree()[node]/(G.nodes[node]['inCitations'] + G.nodes[node]['outCitations'] )
+        G.nodes[node]['inCitsPerYear'] = inCitations[node]/years_ago[node]
     return G
 
 
@@ -108,12 +112,26 @@ def trim_graph_fraction(G, max_size):
     removes nodes with fewer than the average*frac_keep_factor fraction of connected edges
     get_frac_connected must be run first... TODO: this should problably just be integrated into one funciton. 
     """
-    
+
     frac_connected = pd.Series(nx.get_node_attributes(G, 'frac_connected')).sort_values(ascending=False)
 
     keep = frac_connected.iloc[0:max_size]
     min_fraction = keep.iloc[-1]
     print('discading nodes with fewer than {:.3f} fraction connected edges'.format(min_fraction))
+ 
+    G = G.subgraph(keep.index)
+    G = nx.Graph(G)
+
+    return G
+
+# TODO: should be able to have one function to dowselect arbitrary size basedon attr
+def trim_graph_inCits(G, max_size):
+
+    frac_connected = pd.Series(nx.get_node_attributes(G, 'inCitations')).sort_values(ascending=False)
+
+    keep = frac_connected.iloc[0:max_size]
+    min_fraction = keep.iloc[-1]
+    print('discading nodes with fewer than {:.3f} in citations per year'.format(min_fraction))
  
     G = G.subgraph(keep.index)
     G = nx.Graph(G)
