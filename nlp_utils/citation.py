@@ -77,13 +77,11 @@ def trim_graph_size(G, max_size):
     val_counts = s_degrees.value_counts().sort_index(ascending=False)
     edges_cutoff = val_counts.where(val_counts.cumsum()<max_size).dropna().astype(int).index[-1]
 
-    print("removing all papers with less than {} edges to keep graph to size {}".format(edges_cutoff, max_size))
     s_degrees = s_degrees.where(s_degrees>edges_cutoff).dropna()
     # s_degrees.hist(bins=100)
 
     G = G.subgraph(s_degrees.index)
-    print("after removing min connection: {}".format(len(G.nodes())))
-
+    print("removing all papers with less than {} edges to reduce graph from size {} to {}".format(edges_cutoff, len(G.nodes)))
     G = nx.Graph(G)
     return G
 
@@ -117,11 +115,11 @@ def trim_graph_fraction(G, max_size):
 
     keep = frac_connected.iloc[0:max_size]
     min_fraction = keep.iloc[-1]
-    print('discading nodes with fewer than {:.3f} fraction connected edges'.format(min_fraction))
  
     G = G.subgraph(keep.index)
     G = nx.Graph(G)
 
+    print('discading nodes with fewer than {:.3f} fraction connected edges to reduce graph to size'.format(min_fraction, len(G.nodes)))
     return G
 
 # TODO: should be able to have one function to dowselect arbitrary size basedon attr
