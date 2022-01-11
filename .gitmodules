@@ -1,0 +1,3 @@
+[submodule "mat2vec"]
+	path = mat2vec
+	url = https://github.com/aspitarl/mat2vec
