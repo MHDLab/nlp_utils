@@ -55,10 +55,9 @@ def gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs):
 
     bigram_kwargs and lda_kwargs are dictionaries for the bigram phraser and LDA model generation. 
     """
-    #TODO: update to use class above
-    texts_bigram = gensim_bigram(texts, bigram_kwargs)
+    gensim_transformer = Gensim_Bigram_Transformer(bigram_kwargs)
+    texts_bigram = gensim_transformer.fit_transform(texts)
     id2word, data_words, lda_model = basic_gensim_lda(texts, lda_kwargs)
-    
 
     return texts_bigram, id2word, data_words, lda_model
 
