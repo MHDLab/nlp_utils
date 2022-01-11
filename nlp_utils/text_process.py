@@ -11,7 +11,7 @@ import sys
 import string
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
-sys.path.append(r'C:\Users\aspit\Git\MLEF-Energy-Storage\ES_TextData\mat2vec')
+sys.path.append(r'..')
 from mat2vec.processing import MaterialsTextProcessor
 
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -78,9 +78,9 @@ if __name__ == '__main__':
 
     import sqlite3
     import os
-    from nlp_utils.io import load_df_semantic
+    from fileio import load_df_semantic
 
-    DATASET_DIR = r'C:\Users\aspit\Git\NLP-Semantic\datasets'
+    DATASET_DIR = r'E:'
     db_path = os.path.join(DATASET_DIR, 'soc.db')
 
     #Get IDS
