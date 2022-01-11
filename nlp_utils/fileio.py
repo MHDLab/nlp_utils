@@ -71,10 +71,11 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
     if dataset == 'soc':
         df['inCitations'] = df['inCitations'].apply(lambda x: x.strip('[]').replace("'", "").replace(" ", "").split(','))
         df['outCitations'] = df['outCitations'].apply(lambda x: x.strip('[]').replace("'", "").replace(" ", "").split(','))
+        df = df.rename({'s2Url': 'display_url'}, axis=1)
     elif dataset == 's2orc':
         df['inbound_citations'] = df['inbound_citations'].apply(lambda x: x.strip('[]').split(','))
         df['outbound_citations'] = df['outbound_citations'].apply(lambda x: x.strip('[]').split(','))
-
+        df = df.rename({'s2_url': 'display_url'}, axis=1)
     return df
 
 def get_column_as_list(con, col_name, table_name):
@@ -102,6 +103,37 @@ def load_df_MA(db_path):
     df_out = df_out.dropna(subset=['processed_text'])
 
     return df_out 
+
+def load_df_SEAMs(db_folder):
+    """
+    Loads in the SEAMS data in a format that is consistent with SOC data The
+    seams data consists of processed OCR text data in a sqlite database. There
+    is a metadata csv file that is stored with it on the sharepoint. This
+    metadata file has the same information as the metadata table in the database
+    but also includes the edx pdf url. 
+
+    TODO: reorganize and simplify SEAMS data storage, only using OCR text in database. 
+
+    this function takes in the folder path and loads both files into one dataframe
+    """
+    db_path = os.path.join(db_folder, 'seamsnlp_final.db')
+    con = sqlite3.connect(db_path)
+    df = pd.read_sql_query("SELECT * FROM texts", con, index_col='ID')['processed_text']
+
+    metadata_path = os.path.join(db_folder, 'SEAMs_metadata.csv')
+    df_meta = pd.read_csv(metadata_path, index_col=0)
+    # df_meta = pd.read_sql_query("SELECT * FROM metadata", con, index_col='ID')
+
+    df = pd.concat([df, df_meta], axis=1)
+
+    df.index.name = 'id'
+    df = df.rename({
+        'Title': 'title',
+        'Year':'year',
+        'pdf_url': 'display_url'
+    }, axis=1)
+
+    return df
 
 if __name__ == '__main__':
 
