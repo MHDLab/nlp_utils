@@ -118,7 +118,7 @@ def load_df_SEAMs(db_folder):
     """
     db_path = os.path.join(db_folder, 'seamsnlp_final.db')
     con = sqlite3.connect(db_path)
-    df = pd.read_sql_query("SELECT * FROM texts", con, index_col='ID')['processed_text']
+    df = pd.read_sql_query("SELECT * FROM texts", con, index_col='ID')
 
     metadata_path = os.path.join(db_folder, 'SEAMs_metadata.csv')
     df_meta = pd.read_csv(metadata_path, index_col=0)
