@@ -101,14 +101,14 @@ import math
 from textwrap import wrap
 from .common import fit_topic_year
 
-
 def top_slopes_plot(df_topicsyear, topic_strs, year_range_fit, n_plots = 5, ascending=False, highlight_topics=[]):
     col_wrap = 5
     
     df_fit_params  = fit_topic_year(df_topicsyear, year_range_fit)
     top_slopes = df_fit_params['slope'].sort_values(ascending=ascending)[0:n_plots]
     
-    n_rows = math.trunc(len(top_slopes)/col_wrap)
+    n_rows = math.trunc((len(top_slopes)-1)/col_wrap) + 1
+
 
     fig, axes = plt.subplots(n_rows, min(col_wrap,len(top_slopes.index)), figsize=(20,4*n_rows), sharey=True, squeeze=False)
     
