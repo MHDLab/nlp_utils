@@ -79,15 +79,23 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
         df = df.rename({'s2_url': 'display_url'}, axis=1)
     return df
 
-def get_column_as_list(con, col_name, table_name):
+def get_columns_as_df(con, columns, search_limit=None, dataset='soc', table_name='raw_text'):
     """
     returns a column from the database parsing as a list
     """
 
-    ids = con.execute("select \"{}\" from {}".format(col_name, table_name)).fetchall()
-    ids = [i[0] for i in ids if i[0] != None]
+    idx = get_idx_name_semantic(dataset)
 
-    return ids
+    column_str = ", ".join([idx, *columns])
+
+    query  = "SELECT {} FROM {}".format(column_str, table_name)
+
+    if search_limit != None:
+        query += " LIMIT {}".format(search_limit)
+
+    df = pd.read_sql_query(query ,con, index_col=idx)
+
+    return df
 
 def load_df_MA(db_path):
     con = sqlite3.connect(db_path)
