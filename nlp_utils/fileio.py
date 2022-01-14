@@ -59,12 +59,20 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
     columns = [t[1] for t in table_info]
 
     cursor = con.cursor()
-    cursor.execute(
-        "SELECT * from raw_text where {} in (\"{}\")".format(search_idx, "\", \"".join(ids))
-        )
-    results = cursor.fetchall()
+    # cursor.execute(
+    #     "SELECT * from raw_text where {} in (\"{}\")".format(search_idx, "\", \"".join(ids))
+    #     )
+    # results = cursor.fetchall()
 
-    df = pd.DataFrame(results, columns=columns).set_index(idx)
+    #This method seems to be faster than the 'in' method above.
+    results = []
+    for id in ids:
+        cursor.execute(
+            "SELECT * from raw_text where {} is \"{}\"".format('id', id)
+            )
+        results.extend(cursor.fetchall())
+
+    df = pd.DataFrame(results, columns=columns).set_index(search_idx)
     df['year'] = df['year'].astype(float).astype(int)
 
     df['years_ago'] = abs(2022 - df['year'])
