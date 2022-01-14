@@ -32,6 +32,13 @@ def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit, output
 
     return ids
 
+def get_idx_name_semantic(dataset):
+    if dataset == 'soc':
+        return 'id'
+    elif dataset == 's2orc':
+        return 'paper_id'
+    else:
+        raise ValueError("dataset must be 'soc' or 's2orc'")
 
 def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
     """
@@ -40,18 +47,12 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
 
     TODO: Perhaps names should be made consistent here. 
     """
-    if dataset == 'soc':
-        idx = 'id'
-    elif dataset == 's2orc':
-        idx = 'paper_id'
-    else:
-        raise ValueError("dataset must be 'soc' or 's2orc'")
 
     #search through database using a different index like doi
     if cust_idx_name != None:
         search_idx = cust_idx_name
     else:
-        search_idx = idx
+        search_idx = get_idx_name_semantic(dataset)
 
 
     table_info = con.execute(f'PRAGMA table_info(raw_text);').fetchall()
