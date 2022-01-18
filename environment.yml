@@ -1,5 +1,6 @@
 name: nlp_3
 channels:
+  - ngsolve
   - conda-forge
   - defaults
 dependencies:
@@ -8,18 +9,20 @@ dependencies:
   - ase=3.22.0=pyhd8ed1ab_0
   - async-timeout=3.0.1=py38haa95532_0
   - attrs=21.2.0=pyhd3eb1b0_0
+  - autopep8=1.5.7=pyhd3eb1b0_0
   - backcall=0.2.0=pyhd3eb1b0_0
   - beautifulsoup4=4.9.3=pyha847dfd_0
   - blas=1.0=mkl
-  - bokeh=2.3.3=py38haa95532_0
+  - bokeh=2.4.2=py38haa244fe_0
   - boto3=1.17.109=pyhd3eb1b0_0
   - botocore=1.20.109=pyhd3eb1b0_1
+  - bottleneck=1.3.2=py38h2a96729_1
   - brotlipy=0.7.0=py38h2bbff1b_1003
   - bzip2=1.0.8=he774522_0
-  - ca-certificates=2021.5.30=h5b45459_0
+  - ca-certificates=2021.10.8=h5b45459_0
   - cachetools=4.2.2=pyhd3eb1b0_0
   - catalogue=1.0.0=py38_1
-  - certifi=2021.5.30=py38haa244fe_0
+  - certifi=2021.10.8=py38haa244fe_1
   - cffi=1.14.6=py38h2bbff1b_0
   - cftime=1.5.0=py38h080aedc_0
   - chardet=3.0.4=py38haa95532_1003
@@ -67,6 +70,7 @@ dependencies:
   - ipykernel=5.3.4=py38h5ca1d4c_0
   - ipython=7.22.0=py38hd4e2768_0
   - ipython_genutils=0.2.0=pyhd3eb1b0_1
+  - isa-l=2.30.0=h8ffe710_4
   - itsdangerous=2.0.1=pyhd3eb1b0_0
   - jedi=0.17.0=py38_0
   - jinja2=3.0.1=pyhd3eb1b0_0
@@ -121,15 +125,16 @@ dependencies:
   - networkx=2.5=py_0
   - nltk=3.6.2=pyhd3eb1b0_0
   - numba=0.53.1=py38hf11a4ad_0
+  - numexpr=2.7.3=py38hb80d3ca_1
   - numpy=1.21.0=py38h09042cb_0
   - olefile=0.46=py_0
-  - openssl=1.1.1k=h8ffe710_0
+  - openssl=1.1.1l=h8ffe710_0
   - packaging=21.0=pyhd3eb1b0_0
   - palettable=3.3.0=py_0
-  - pandas=1.2.5=py38hd77b12b_0
   - parso=0.8.2=pyhd3eb1b0_0
   - pdfminer.six=20201018=pyhd8ed1ab_3
   - pickleshare=0.7.5=pyhd3eb1b0_1003
+  - pigz=2.6=h4b92bb4_0
   - pillow=8.3.1=py38h4fa10fc_0
   - pip=21.1.3=py38haa95532_0
   - plac=1.1.0=py38_1
@@ -142,6 +147,7 @@ dependencies:
   - pyasn1=0.4.8=py_0
   - pyasn1-modules=0.2.8=py_0
   - pybtex=0.24.0=py38haa244fe_0
+  - pycodestyle=2.7.0=pyhd3eb1b0_0
   - pycparser=2.20=py_2
   - pygments=2.9.0=pyhd3eb1b0_0
   - pymatgen=2022.0.10=py38hbd9d945_0
@@ -152,6 +158,7 @@ dependencies:
   - python=3.8.10=hdbf39b2_7
   - python-crfsuite=0.9.7=py38hd77b12b_1
   - python-dateutil=2.8.2=pyhd3eb1b0_0
+  - python-isal=0.11.0=py38h294d835_0
   - python-levenshtein=0.12.2=py38h294d835_0
   - python_abi=3.8=2_cp38
   - pytz=2021.1=pyhd3eb1b0_0
@@ -167,7 +174,6 @@ dependencies:
   - ruamel.yaml.clib=0.2.2=py38he774522_0
   - s3transfer=0.4.2=pyhd3eb1b0_0
   - scikit-learn=0.24.2=py38hf11a4ad_1
-  - scipy=1.6.2=py38h66253e8_1
   - setuptools=52.0.0=py38haa95532_0
   - six=1.16.0=pyhd3eb1b0_0
   - smart_open=5.1.0=pyhd3eb1b0_0
@@ -184,6 +190,7 @@ dependencies:
   - thinc=7.4.5=py38h757b272_0
   - threadpoolctl=2.2.0=pyhb85f177_0
   - tk=8.6.10=he774522_0
+  - toml=0.10.2=pyhd3eb1b0_0
   - tornado=6.1=py38h2bbff1b_0
   - tqdm=4.61.2=pyhd3eb1b0_1
   - traitlets=5.0.5=pyhd3eb1b0_0
@@ -204,6 +211,7 @@ dependencies:
   - win_inet_pton=1.1.0=py38haa95532_0
   - wincertstore=0.2=py38_0
   - xarray=0.18.2=pyhd3eb1b0_1
+  - xopen=1.1.0=py38haa244fe_3
   - xz=5.2.5=h62dcd97_0
   - yaml=0.2.5=he774522_0
   - yarl=1.5.1=py38he774522_0
@@ -212,8 +220,14 @@ dependencies:
   - zlib=1.2.11=h62dcd97_4
   - zstd=1.4.9=h19a0ad4_0
   - pip:
+    - fa2==0.3.5
+    - opencv-python==4.5.5.62
+    - pandas==1.1.5
+    - pytesseract==0.3.8
     - python-louvain==0.15
+    - scipy==1.5.4
     - spacy==2.3.7
+    - table-ocr==0.2.5
     - tmtoolkit==0.10.0
     - xlrd==2.0.1
 prefix: C:\Users\aspit\anaconda3\envs\nlp_3
