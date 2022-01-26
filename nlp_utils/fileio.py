@@ -32,39 +32,24 @@ def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit, output
 
     return ids
 
-def get_idx_name_semantic(dataset):
-    if dataset == 'soc':
-        return 'id'
-    elif dataset == 's2orc':
-        return 'paper_id'
-    else:
-        raise ValueError("dataset must be 'soc' or 's2orc'")
 
 def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
     """
     load a series of papers from either semantic open corpus(soc) or s2orc datasets.
     cust_idx_name: overrides default index to search through (e.g. doi)
-
-    TODO: Perhaps names should be made consistent here. 
     """
 
     #search through database using a different index like doi
     if cust_idx_name != None:
         search_idx = cust_idx_name
     else:
-        search_idx = get_idx_name_semantic(dataset)
+        search_idx = 'id'
 
 
     table_info = con.execute(f'PRAGMA table_info(raw_text);').fetchall()
     columns = [t[1] for t in table_info]
 
     cursor = con.cursor()
-    # cursor.execute(
-    #     "SELECT * from raw_text where {} in (\"{}\")".format(search_idx, "\", \"".join(ids))
-    #     )
-    # results = cursor.fetchall()
-
-    #This method seems to be faster than the 'in' method above.
     results = []
     for id in ids:
         cursor.execute(
@@ -92,43 +77,30 @@ def get_columns_as_df(con, columns, search_limit=None, dataset='soc', table_name
     returns a column from the database parsing as a list
     """
 
-    idx = get_idx_name_semantic(dataset)
-
-    column_str = ", ".join([idx, *columns])
+    column_str = ", ".join(['id', *columns])
 
     query  = "SELECT {} FROM {}".format(column_str, table_name)
 
     if search_limit != None:
         query += " LIMIT {}".format(search_limit)
 
-    df = pd.read_sql_query(query ,con, index_col=idx)
+    df = pd.read_sql_query(query ,con, index_col='id')
 
     return df
 
 
-def load_df_SEAMs(db_folder):
+def load_df_SEAMs(con):
     """
     Loads in the SEAMS data in a format that is consistent with SOC data The
     seams data consists of processed OCR text data in a sqlite database. There
     is a metadata csv file that is stored with it on the sharepoint. This
     metadata file has the same information as the metadata table in the database
     but also includes the edx pdf url. 
-
-    TODO: reorganize and simplify SEAMS data storage, only using OCR text in database. 
-
-    this function takes in the folder path and loads both files into one dataframe
     """
-    db_path = os.path.join(db_folder, 'seamsnlp_final.db')
-    con = sqlite3.connect(db_path)
-    df = pd.read_sql_query("SELECT * FROM texts", con, index_col='ID')
-
-    metadata_path = os.path.join(db_folder, 'SEAMs_metadata.csv')
-    df_meta = pd.read_csv(metadata_path, index_col=0)
-    # df_meta = pd.read_sql_query("SELECT * FROM metadata", con, index_col='ID')
-
+    df = pd.read_sql_query("SELECT * FROM texts", con, index_col='id')
+    df_meta = pd.read_sql_query("SELECT * FROM metadata", con, index_col='id')
     df = pd.concat([df, df_meta], axis=1)
 
-    df.index.name = 'id'
     df = df.rename({
         'Title': 'title',
         'Year':'year',
