@@ -37,6 +37,9 @@ class Gensim_Bigram_Transformer(BaseEstimator, TransformerMixin):
         
 
 def basic_gensim_lda(texts, lda_kwargs):
+    """
+    texts: list of lists of words (eg. df['raw_text'].apply(str.split))
+    """
     id2word = gensim.corpora.Dictionary(texts)
     data_words = [id2word.doc2bow(doc) for doc in texts]
 
@@ -45,21 +48,10 @@ def basic_gensim_lda(texts, lda_kwargs):
                                     **lda_kwargs,
                                     random_state=42
     )
+    lda_model.id2word = id2word
+    lda_model.data_words = data_words
 
-    return id2word, data_words, lda_model
-
-
-def gensim_lda_bigram(texts, bigram_kwargs, lda_kwargs):
-    """
-    Basic model generation pipeline to generate bigrams from a series of texts and then generate an LDA model. 
-
-    bigram_kwargs and lda_kwargs are dictionaries for the bigram phraser and LDA model generation. 
-    """
-    gensim_transformer = Gensim_Bigram_Transformer(bigram_kwargs)
-    texts_bigram = gensim_transformer.fit_transform(texts)
-    id2word, data_words, lda_model = basic_gensim_lda(texts, lda_kwargs)
-
-    return texts_bigram, id2word, data_words, lda_model
+    return lda_model
 
 
 def get_vocab_docl(data_words, id2word):
