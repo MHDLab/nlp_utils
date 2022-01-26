@@ -7,11 +7,9 @@ texts: list of string words for each document
 corpus: digitized bag of words for
 """
 
-import sys
 import string
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
-sys.path.append(r'..')
 from mat2vec.processing import MaterialsTextProcessor
 
 from sklearn.base import BaseEstimator, TransformerMixin
