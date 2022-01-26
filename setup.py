@@ -27,11 +27,8 @@ REQUIRES_PYTHON = '>=3.7'
 VERSION = 0.1
 
 # What packages are required for this module to be executed?
+# Handling this with environment.yml for now. May just get rid of nlp_utils.
 REQUIRED = [
-    'xarray',
-    'numba',
-    'tmtoolkit',
-    'scikit-learn'
 ]
 
 # What packages are optional?
