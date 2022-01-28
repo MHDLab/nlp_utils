@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-def calc_topics_year(df_doc_topic_probs, s_year, norm_each_topic=True):
+def calc_topics_year(df_doc_topic_probs, s_year, norm_each_topic=False):
     """
     Calculate the topic probability trends (how the proability of a topic is changing over the years). 
     A dataframe with index = year and column = topic is created that represents the
