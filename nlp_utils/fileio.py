@@ -1,11 +1,20 @@
 import sqlite3
 import os
 import pandas as pd
+import re
 
-def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit, output_limit):
+#https://stackoverflow.com/questions/5365451/problem-with-regexp-python-and-sqlite
+def sqlite_regexp(expr, item):
+    reg = re.compile(expr)
+    return reg.search(item) is not None
+
+def gen_ids_regex(con, regex, idx_name, search_fields, search_limit, output_limit):
     """
     For each regular expression search if it exists in any of the search_fields
     """
+
+    con.create_function("REGEXP", 2, sqlite_regexp)
+
     cursor = con.cursor()
 
     # put -- to comment out line
@@ -13,13 +22,17 @@ def gen_ids_searchterm(con, regex, idx_name, search_fields, search_limit, output
         SELECT {} FROM
         --raw_text
         (SELECT * FROM raw_text LIMIT {})
-        WHERE {} LIKE '{}'
+        WHERE {} REGEXP '{}'
     """.format(idx_name, search_limit, search_fields[0], regex)
 
     for search_field in search_fields[1:]:
-        execute_str = execute_str + " OR {} like '{}'".format(search_field, regex)
+        execute_str = execute_str + " OR {} REGEXP '{}'".format(search_field, regex)
 
     execute_str = execute_str + ' LIMIT {}'.format(output_limit)
+
+    print('Excecuting Query:')
+    print(execute_str)
+
     cursor.execute(execute_str)
     ## Just get count, seems to take as long. 
     # cursor.execute("SELECT COUNT(*) FROM raw_text WHERE abstract LIKE '%flywheel energy storage%'")
@@ -118,7 +131,7 @@ if __name__ == '__main__':
     con = sqlite3.connect(os.path.join(db_folder, 'soc.db'))
 
     regex = '%energy storage%'
-    ids = gen_ids_searchterm(con, regex, idx_name='id', search_fields=['paperAbstract', 'title'], search_limit=int(1e4))
+    ids = gen_ids_regex(con, regex, idx_name='id', search_fields=['paperAbstract', 'title'], search_limit=int(1e4))
 
     df = load_df_semantic(con, ids)
     print(df.head())
