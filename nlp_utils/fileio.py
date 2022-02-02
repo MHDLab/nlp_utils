@@ -80,11 +80,11 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
         df['outCitations'] = df['outCitations'].apply(lambda x: x.strip('[]').replace("'", "").replace(" ", "").split(','))
         df = df.rename({'s2Url': 'display_url'}, axis=1)
     elif dataset == 's2orc':
-        df['inbound_citations'] = df['inbound_citations'].apply(lambda x: x.strip('[]').split(','))
-        df['outbound_citations'] = df['outbound_citations'].apply(lambda x: x.strip('[]').split(','))
+        df['inCitations'] = df['inbound_citations'].apply(lambda x: x.strip('[]').split(','))
+        df['inCitations'] = df['outbound_citations'].apply(lambda x: x.strip('[]').split(','))
         df = df.rename({'s2_url': 'display_url'}, axis=1)
 
-    df['inCits_per_year'] = df['inbound_citations'].apply(len)
+    df['inCits_per_year'] = df['inCitations'].apply(len)
     return df
 
 def get_columns_as_df(con, columns, search_limit=None, dataset='soc', table_name='raw_text'):
