@@ -60,7 +60,7 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
     df = pd.DataFrame(results, columns=columns).set_index(search_idx)
     df['year'] = df['year'].astype(float).astype(int)
 
-    df['years_ago'] = abs(2022 - df['year'])
+    df['years_ago'] = abs(2020 - df['year']) #TODO: how to find 'max year' of dataset 
 
     if dataset == 'soc':
         df['inCitations'] = df['inCitations'].apply(lambda x: x.strip('[]').replace("'", "").replace(" ", "").split(','))
@@ -70,6 +70,8 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
         df['inbound_citations'] = df['inbound_citations'].apply(lambda x: x.strip('[]').split(','))
         df['outbound_citations'] = df['outbound_citations'].apply(lambda x: x.strip('[]').split(','))
         df = df.rename({'s2_url': 'display_url'}, axis=1)
+
+    df['inCits_per_year'] = df['inbound_citations'].apply(len)
     return df
 
 def get_columns_as_df(con, columns, search_limit=None, dataset='soc', table_name='raw_text'):
