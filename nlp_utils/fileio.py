@@ -8,9 +8,12 @@ def sqlite_regexp(expr, item):
     reg = re.compile(expr)
     return reg.search(item) is not None
 
-def gen_ids_regex(con, regex, idx_name, search_fields, search_limit, output_limit):
+def gen_ids_regex(con, regex, idx_name, search_fields, search_limit=0, output_limit=0):
     """
-    For each regular expression search if it exists in any of the search_fields
+    return index of row where the regex is found in the search_fields
+    search_limit: how far to look in the database
+    output_limit: limit return results 
+    use 0 for the limits to have no limit.
     """
 
     con.create_function("REGEXP", 2, sqlite_regexp)
@@ -18,17 +21,20 @@ def gen_ids_regex(con, regex, idx_name, search_fields, search_limit, output_limi
     cursor = con.cursor()
 
     # put -- to comment out line
-    execute_str = """
-        SELECT {} FROM
-        --raw_text
-        (SELECT * FROM raw_text LIMIT {})
-        WHERE {} REGEXP '{}'
-    """.format(idx_name, search_limit, search_fields[0], regex)
+    execute_str = "SELECT {} FROM".format(idx_name)
 
+    if search_limit == 0:
+        execute_str += ' raw_text'
+    else:
+        execute_str += ' (SELECT * FROM raw_text LIMIT {})'.format(search_limit)
+
+    execute_str +=  " WHERE {} REGEXP '{}'".format(search_fields[0], regex)
+        
     for search_field in search_fields[1:]:
         execute_str = execute_str + " OR {} REGEXP '{}'".format(search_field, regex)
 
-    execute_str = execute_str + ' LIMIT {}'.format(output_limit)
+    if output_limit > 0:
+        execute_str = execute_str + ' LIMIT {}'.format(output_limit)
 
     print('Excecuting Query:')
     print(execute_str)
