@@ -140,7 +140,7 @@ def top_slopes_plot(df_topicsyear, topic_strs, year_range_fit, n_plots = 5, asce
     for ax in axes.flatten():
         ax.set_ylim(0, current_ylim[1]*1.2)
 
-    axes[0][0].set_ylabel('Normalized (over years) Topic Probability')
+    axes[0][0].set_ylabel('Topic Probability')
 
     fig.tight_layout()
 
