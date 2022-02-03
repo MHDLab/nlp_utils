@@ -6,7 +6,7 @@ import re
 #https://stackoverflow.com/questions/5365451/problem-with-regexp-python-and-sqlite
 def sqlite_regexp(expr, item):
     reg = re.compile(expr)
-    return reg.search(item) is not None
+    return reg.search(item, re.IGNORECASE) is not None
 
 def gen_ids_regex(con, regex, idx_name, search_fields, search_limit=0, output_limit=0):
     """
