@@ -28,10 +28,12 @@ def gen_ids_regex(con, regex, idx_name, search_fields, search_limit=0, output_li
     else:
         execute_str += ' (SELECT * FROM raw_text LIMIT {})'.format(search_limit)
 
-    execute_str +=  " WHERE {} REGEXP '{}'".format(search_fields[0], regex)
+    execute_str +=  " WHERE {} LIKE '{}'".format(search_fields[0], regex)
+
+    print(execute_str)
         
-    for search_field in search_fields[1:]:
-        execute_str = execute_str + " OR {} REGEXP '{}'".format(search_field, regex)
+    # for search_field in search_fields[1:]:
+    #     execute_str = execute_str + " OR {} CONTAINS '{}'".format(search_field, regex)
 
     if output_limit > 0:
         execute_str = execute_str + ' LIMIT {}'.format(output_limit)
@@ -72,7 +74,7 @@ def load_df_semantic(con, ids, dataset='soc', cust_idx_name=None):
     results = []
     for id in ids:
         cursor.execute(
-            "SELECT * from raw_text where {} is \"{}\"".format('id', id)
+            "SELECT * from raw_text where {} is \"{}\"".format(search_idx, id)
             )
         results.extend(cursor.fetchall())
 
